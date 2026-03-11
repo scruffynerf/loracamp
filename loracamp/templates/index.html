@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+<header>
+    <h1>{{ catalog.title if catalog else "LoraCamp Collection" }}</h1>
+    {% if catalog and catalog.synopsis %}
+    <p class="synopsis">{{ catalog.synopsis }}</p>
+    {% endif %}
+</header>
+
+<main class="page_grid">
+    <div class="model_list">
+        {% for model_item in models %}
+        <div class="release">
+            <a href="{{ model_item.slug }}/index.html">
+                {% if model_item.preview_url %}
+                <img src="{{ model_item.slug }}/{{ model_item.preview_url }}" alt="{{ model_item.manifest.title }}">
+                {% else %}
+                <div class="placeholder"></div>
+                {% endif %}
+                <h2>{{ model_item.manifest.title or model_item.dir.name }}</h2>
+            </a>
+            {% if model_item.manifest.creator %}
+            <p class="creator">by {{ model_item.manifest.creator }}</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</main>
+{% endblock %}

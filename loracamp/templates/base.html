@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ catalog.title if catalog else "LoraCamp" }}{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/site.css">
+    {% block head %}{% endblock %}
+</head>
+
+<body class="layout">
+    <header>
+        <div class="header-container">
+            <a id="logo" href="/index.html">
+                <span class="logo-icon">🔗</span>
+                <span class="site-title">{{ catalog.title if catalog else "LoraCamp" }}</span>
+            </a>
+        </div>
+    </header>
+
+    <main id="content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <span class="signature">Built with LoraCamp</span>
+        </div>
+    </footer>
+</body>
+
+</html>

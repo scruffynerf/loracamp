@@ -1,0 +1,10 @@
+pytest
+pytest-cov
+tomli
+tomli-w
+jinja2
+python-ffmpeg
+babel
+Pillow
+static-ffmpeg
+python-ffmpegio

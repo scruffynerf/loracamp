@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}{{ model.title }} - LoraCamp{% endblock %}
+
+{% block content %}
+<header>
+    <a href="../index.html" class="back-link">← Back to Catalog</a>
+    <h1>{{ model.title }}</h1>
+    {% if model.creator or model.creators %}
+    <p class="creator">by
+        {% if model.creators %}
+        {{ model.creators | join(', ') }}
+        {% else %}
+        {{ model.creator }}
+        {% endif %}
+    </p>
+    {% endif %}
+
+    <div class="specs">
+        {% if model.version %}<span class="badge">Version {{ model.version }}</span>{% endif %}
+        {% if model.base_model %}<span class="badge">Base: {{ model.base_model }}</span>{% endif %}
+    </div>
+</header>
+
+<div class="page_split">
+    <div class="model_sidebar">
+        {% if preview_url %}
+        <img src="{{ preview_url }}" alt="{{ model.title }}" class="cover">
+        {% else %}
+        <div class="placeholder large"></div>
+        {% endif %}
+
+        {% if model.previews %}
+        <div class="gallery">
+            {% for extra in model.previews %}
+            <img src="{{ extra }}" alt="Preview {{ loop.index }}" class="thumb">
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="actions primary">
+            <a href="{{ model_url }}" class="button emphasized">Download Model (.safetensors)</a>
+            <a href="metadata.json" class="button">Metadata JSON</a>
+        </div>
+    </div>
+
+    <div class="model_info">
+        {% if model.about %}
+        <section class="about">
+            <h2>About</h2>
+            <div class="text">{{ model.about }}</div>
+        </section>
+        {% endif %}
+
+        {% if model.trigger_word or model.sample_prompts %}
+        <section class="prompts">
+            <h2>Usage</h2>
+            {% if model.trigger_word %}
+            <div class="usage_item">
+                <label>Trigger Word:</label>
+                <code>{{ model.trigger_word }}</code>
+            </div>
+            {% endif %}
+
+            {% if model.sample_prompts %}
+            <div class="usage_item">
+                <label>Sample Prompts:</label>
+                {% for prompt in model.sample_prompts %}
+                <blockquote class="sample_prompt">{{ prompt }}</blockquote>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </section>
+        {% endif %}
+
+        {% if samples %}
+        <section class="samples">
+            <h2>Samples</h2>
+            <div class="tracks">
+                {% for sample in samples %}
+                <div class="track">
+                    <span class="title">{{ sample.name }}</span>
+                    <audio controls src="{{ sample.url }}"></audio>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
