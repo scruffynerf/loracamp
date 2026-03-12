@@ -47,27 +47,32 @@ def generate_metadata_json(
     Assemble metadata JSON combining manifest data and technical data (SHA256, Safetensor __metadata__).
     """
     metadata = {
-        "title": model_manifest.title,
-        "about": model_manifest.about,
-        "trigger_word": model_manifest.trigger_word,
-        "creator": model_manifest.creator,
-        "release_date": model_manifest.release_date,
-        "release_creators": model_manifest.release_creators,
+        "file_name": safetensor_path.stem if safetensor_path else model_manifest.title,
+        "model_name": model_manifest.title,
+        "size": safetensor_path.stat().st_size if safetensor_path and safetensor_path.exists() else 0,
+        "modified": safetensor_path.stat().st_mtime if safetensor_path and safetensor_path.exists() else 0,
+        "sha256": calculate_sha256(safetensor_path) if safetensor_path and safetensor_path.exists() else "",
+        "base_model": model_manifest.base_model or "Other",
+        "preview_url": "", # Optional logic could be added here later if needed
+        "preview_nsfw_level": 0,
+        "notes": model_manifest.about or "",
+        "from_civitai": False,
+        "civitai": {
+            "trainedWords": [model_manifest.trigger_word] if model_manifest.trigger_word else []
+        },
+        "tags": [],
+        "modelDescription": model_manifest.about or "",
+        "civitai_deleted": False,
+        "favorite": False,
+        "exclude": False,
+        "db_checked": False,
+        "skip_metadata_refresh": False,
+        "metadata_source": "loracamp",
+        "last_checked_at": 0,
+        "usage_tips": "{}"
     }
-    
-    if safetensor_path and safetensor_path.exists():
-        metadata["technical"] = {
-            "sha256": calculate_sha256(safetensor_path),
-            "filename": safetensor_path.name,
-            "size_bytes": safetensor_path.stat().st_size
-        }
-        
-        # Extract Safetensor specific __metadata__ header
-        st_meta = extract_safetensors_metadata(safetensor_path)
-        if st_meta:
-            metadata["technical"]["__metadata__"] = st_meta
             
-    return json.dumps(metadata, indent=4)
+    return json.dumps(metadata, indent=2)
 
 def save_metadata(json_content: str, output_path: Path):
     """Save the metadata JSON to a file."""

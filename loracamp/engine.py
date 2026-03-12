@@ -117,6 +117,18 @@ class LoraCampEngine:
                 if model_data:
                     models.append(model_data)
         
+        # Auto-generate creators from models that don't have a creator.toml
+        known_creators = {c["manifest"].name or c["manifest"].title for c in creators if c["manifest"]}
+        for m in models:
+            c_name = m.get("display_creator")
+            if c_name and c_name not in known_creators and c_name != (getattr(catalog, "creator", None) if catalog else None):
+                c_manifest = CreatorManifest(title=c_name)
+                creators.append({
+                    "manifest": c_manifest,
+                    "dir": self.catalog_dir / c_name
+                })
+                known_creators.add(c_name)
+
         # 5. Render Index
         self.render_index(catalog, models)
 
@@ -145,20 +157,42 @@ class LoraCampEngine:
                     print(f"  - {key}: {err}")
                 return None
             model_manifest = parse_model(manifest_path)
+            
+            # Default missing creator to parent directory if nested
+            if not model_manifest.creator and not model_manifest.creators:
+                if model_dir.parent != self.catalog_dir:
+                    model_manifest.creator = model_dir.parent.name
+
             # Resolve creator via aliases if present
             if model_manifest.creator and model_manifest.creator in self.creator_aliases:
                 model_manifest.creator = self.creator_aliases[model_manifest.creator]
         else:
-            model_manifest = ModelManifest(title=model_dir.name)
+            implicit_creator = model_dir.parent.name if model_dir.parent != self.catalog_dir else None
+            model_manifest = ModelManifest(title=model_dir.name, creator=implicit_creator)
             
-        model_slug = model_manifest.permalink or model_dir.name
+        try:
+            rel_path = model_dir.relative_to(self.catalog_dir)
+            if model_manifest.permalink:
+                if str(rel_path.parent) == ".":
+                    model_slug = model_manifest.permalink
+                else:
+                    model_slug = f"{str(rel_path.parent)}/{model_manifest.permalink}"
+            else:
+                model_slug = str(rel_path)
+        except ValueError:
+            model_slug = model_manifest.permalink or model_dir.name
+
+        model_slug = model_slug.lower().replace(" ", "-")
+        model_manifest.permalink = model_slug
+        
         model_site_dir = self.site_dir / model_slug
         model_site_dir.mkdir(parents=True, exist_ok=True)
 
         # 1. Generate Metadata JSON
         main_model_file = model_dir / safetensor_files[0]
+        metadata_filename = f"{main_model_file.stem}.metadata.json"
         meta_json = generate_metadata_json(model_manifest, main_model_file)
-        save_metadata(meta_json, model_site_dir / "metadata.json")
+        save_metadata(meta_json, model_site_dir / metadata_filename)
 
         # 2. Handle Preview Image / Video
         preview_url = None
@@ -279,12 +313,24 @@ class LoraCampEngine:
         samples = []
         audio_extensions = {".mp3", ".wav", ".flac", ".opus"}
         model_audio_files = []
+        
+        # Check main model dir
         for f in model_dir.iterdir():
-            if f.suffix.lower() in audio_extensions:
+            if f.is_file() and f.suffix.lower() in audio_extensions:
                 sample_data = self.process_sample(f, model_slug, model_manifest)
                 if sample_data:
                     samples.append(sample_data)
                     model_audio_files.append(f)
+                    
+        # Check samples/ nested folder
+        samples_dir = model_dir / "samples"
+        if samples_dir.exists() and samples_dir.is_dir():
+            for f in samples_dir.iterdir():
+                if f.is_file() and f.suffix.lower() in audio_extensions:
+                    sample_data = self.process_sample(f, model_slug, model_manifest)
+                    if sample_data:
+                        samples.append(sample_data)
+                        model_audio_files.append(f)
 
         # 4. Discover Extras (Automatic + Manifest)
         extras = []
@@ -309,7 +355,7 @@ class LoraCampEngine:
         # 5. Prepare Download Links (Replaced ZIP bundling)
         downloads: List[Dict[str, Any]] = [
             {"label": f"Download Model ({model_filename})", "url": model_url, "is_zip": False, "primary": True},
-            {"label": "Download Metadata (JSON)", "url": "metadata.json", "is_zip": False, "primary": False}
+            {"label": "Download Metadata (JSON)", "url": metadata_filename, "is_zip": False, "primary": False}
         ]
         
         if preview_url:
@@ -533,7 +579,22 @@ class LoraCampEngine:
         if not manifest:
             return
 
-        creator_slug = manifest.permalink or (manifest.name or manifest.title or "creator").lower().replace(" ", "-")
+        # If a permalink is explicitly set, use it. Try to compute from dir otherwise.
+        creator_slug = manifest.permalink
+        if not creator_slug:
+            creator_dir = creator_data.get("dir")
+            if creator_dir and creator_dir != self.catalog_dir:
+                try:
+                    rel_path = creator_dir.relative_to(self.catalog_dir)
+                    creator_slug = str(rel_path)
+                except ValueError:
+                    creator_slug = creator_dir.name
+            else:
+                creator_slug = manifest.name or manifest.title or "creator"
+                
+        creator_slug = creator_slug.lower().replace(" ", "-")
+        manifest.permalink = creator_slug
+        
         creator_site_dir = self.site_dir / creator_slug
         creator_site_dir.mkdir(parents=True, exist_ok=True)
 
