@@ -52,6 +52,7 @@ This log tracks functionality from the reference `faircamp` implementation and i
 | **Processing**| `None` | Audio volume normalization (`loudnorm`) is now implemented directly in the Opus transcode pipeline. |
 
 ## Items of Interest / Flags
+
 - **[FLAG]** Safetensors-as-attachments: Port reference "attachments" logic to handle `.safetensors`.
 - **[FLAG]** Jinja2 is the chosen templating engine for its ease of use and standard status.
 - **[FLAG]** TOML is the chosen manifest format.

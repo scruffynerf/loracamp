@@ -5,43 +5,57 @@ The `catalog.toml` file at the root of your directory controls global site setti
 ## Options
 
 ### `title`
+
 The title of your Lora collection.
+
 ```toml
 title = "My Awesome Loras"
 ```
 
 ### `creator`
+
 The default creator name for the collection.
+
 ```toml
 creator = "Artisan"
 ```
 
 ### `base_url`
+
 The URL where your site will be hosted. Required for generating absolute links in metadata.
+
 ```toml
 base_url = "https://loracamp.example.com"
 ```
 
 ### `cdn_url` (Optional)
+
 The URL of your external storage provider if you are hosting large files separately.
+
 ```toml
 cdn_url = "https://cdn.example.com"
 ```
 
 ### `language` (Optional)
+
 The language code for the site (default is `en`).
+
 ```toml
 language = "en"
 ```
 
 ### `synopsis` (Optional)
+
 A short, plain-text introduction for your catalog homepage (max 256 chars).
+
 ```toml
 synopsis = "A collection of high-quality Stable Diffusion Loras for photographers."
 ```
 
 ### `about` (Optional)
+
 Long-form content for the homepage (supports Markdown). Usually appears after the model list.
+
 ```toml
 about = """
 ## Welcome to my Lora collection
@@ -50,7 +64,9 @@ All models here are trained on custom datasets...
 ```
 
 ### `links` (Optional)
+
 A list of external links to show in the header.
+
 ```toml
 [[links]]
 label = "Twitter"
@@ -62,7 +78,9 @@ url = "https://huggingface.co/myuser"
 ```
 
 ### `theme` (Optional)
+
 Customize the visual appearance.
+
 ```toml
 [theme]
 base = "dark" # "light" or "dark"
@@ -72,7 +90,9 @@ round_corners = true
 ```
 
 ### `site_assets` & `site_metadata` (Advanced)
+
 Include custom CSS/JS in the build and the `<head>` section.
+
 ```toml
 site_assets = ["custom.css", "analytics.js"]
 
