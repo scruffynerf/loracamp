@@ -8,6 +8,7 @@ from .assets import copy_static_assets
 from .cdn import resolve_file_url, should_go_to_cdn
 from .validators import validate_manifest
 from .feeds import generate_atom_feed, generate_rss_feed
+from .theming import generate_theme_css
 
 class LoraCampEngine:
     def __init__(
@@ -59,7 +60,11 @@ class LoraCampEngine:
                     print(f"  - {key}: {err}")
                 return # Abort build on catalog error
             catalog = parse_catalog(catalog_manifest_path)
-            
+
+        # 3b. Generate theme CSS from catalog config
+        theme_config = getattr(catalog, "theme", None) if catalog else None
+        self.theme_css = generate_theme_css(theme_config)
+
         # 4. Walk directory for Models and Creators
         models = []
         creators = []
@@ -480,6 +485,7 @@ class LoraCampEngine:
             downloads=downloads,
             catalog=catalog,
             base_url=base_url,
+            theme_css=self.theme_css,
             og_title=og_title,
             og_description=og_description,
             og_image=og_image,
@@ -508,6 +514,7 @@ class LoraCampEngine:
             catalog=catalog,
             models=models,
             base_url=base_url,
+            theme_css=self.theme_css,
             og_title=og_title,
             og_description=og_description,
             og_image=og_image,
@@ -592,6 +599,7 @@ class LoraCampEngine:
                 models=creator_models,
                 creator_image_url=creator_image_url,
                 base_url=base_url,
+                theme_css=self.theme_css,
                 og_title=og_title,
                 og_description=og_description,
                 og_image=og_image,

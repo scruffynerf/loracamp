@@ -25,6 +25,9 @@ dependencies = [
     "mutagen>=1.47.0",
 ]
 
+[project.scripts]
+loracamp = "loracamp.main:main"
+
 [tool.setuptools]
 packages = ["loracamp"]
 

@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{{ catalog.title if catalog else "LoraCamp" }}{% endblock %}</title>
     <link rel="stylesheet" href="/static/css/site.css">
+    {{ theme_css | safe }}
 
     {# OpenGraph / Social meta tags — injected per page #}
     {% if og_title %}<meta property="og:title" content="{{ og_title }}">{% endif %}
@@ -137,8 +138,8 @@
             xxxHours: (h) => `${h} hours`
         };
     </script>
-    <script src="{{ base_url if base_url else '' }}/static/js/player.js"></script>
-    <script src="{{ base_url if base_url else '' }}/static/js/browser.js"></script>
+    <script src="/static/js/player.js"></script>
+    <script src="/static/js/browser.js"></script>
 </body>
 
 </html>
