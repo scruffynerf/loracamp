@@ -70,4 +70,4 @@ This file tracks the current state of the port from Faircamp (Rust) to LoraCamp 
 - **Waveforms & Speed Controls**: Dropped. Visual audio waveforms and playback speed controls are unnecessary complexity for short model preview samples.
 
 ---
-*Last Updated: 2026-03-11 (Dropped i18n)*
+Last Updated: 2026-03-11 (Dropped i18n)

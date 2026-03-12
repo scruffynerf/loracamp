@@ -25,6 +25,7 @@ class LoraCampEngine:
         self.include_patterns = include_patterns or []
         self.exclude_patterns = exclude_patterns or []
         self.creator_aliases: Dict[str, str] = {}
+        self.theme_css: str = ""
         
         # Set up explicit output folders for clarity
         self.site_dir = output_dir / "yoursite"
@@ -84,13 +85,13 @@ class LoraCampEngine:
             if not is_catalog_root:
                 # Exclude: prune this subtree entirely and skip processing
                 if any(p in rel_str for p in self.exclude_patterns):
-                    dirs[:] = []  # prevent os.walk from descending further
+                    dirs.clear()  # prevent os.walk from descending further
                     continue
 
                 # Include: if patterns are given, skip dirs that match none of them.
                 # Also prune subdirs so we don't waste time descending into excluded trees.
                 if self.include_patterns and not any(p in rel_str for p in self.include_patterns):
-                    dirs[:] = []
+                    dirs.clear()
                     continue
 
             print(f"Scanning: {root_path}")
@@ -306,7 +307,7 @@ class LoraCampEngine:
                 extras.append(extra_file)
 
         # 5. Prepare Download Links (Replaced ZIP bundling)
-        downloads = [
+        downloads: List[Dict[str, Any]] = [
             {"label": f"Download Model ({model_filename})", "url": model_url, "is_zip": False, "primary": True},
             {"label": "Download Metadata (JSON)", "url": "metadata.json", "is_zip": False, "primary": False}
         ]

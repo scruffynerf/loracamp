@@ -215,8 +215,5 @@ samplefiles/
 .DS_Store
 .pyre_configuration
 pyrightconfig.json
-test_catalog/Scruffy/Aloris950/Aloris950_comfyui.safetensors
-test_catalog/Scruffy/Aloris950/Aloris950_comfyui.webp
-test_catalog/Scruffy/Aloris950/model.toml
-test_catalog/Scruffy/Aloris950/samples/SongA_00002_.mp3
-test_catalog/Scruffy/Aloris950/samples/SongA_00002_.sample.toml
+test_catalog/Scruffy/
+.vscode/
