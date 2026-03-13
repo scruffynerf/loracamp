@@ -11,7 +11,7 @@ This file tracks the current state of the port from Faircamp (Rust) to LoraCamp 
 - [x] **i18n**: Dropped in favor of native browser translation; `base.html` includes `lang="en"` and a 🌐 Translate footer link.
 - [x] **Templating**: **Jinja2** environment initialized with base layout and index.
 - [x] **Assets**: CSS and JS player assets ported from reference; consolidated into a single `/static/` directory.
-- [x] **CLI**: `main.py` entry point with `--build` and `--cdn-url` support.
+- [x] **CLI**: `main.py` entry point with `--build`, `--cdn-url`, and `--preview` support.
 
 ## Feature Roadmap
 
@@ -47,8 +47,9 @@ This file tracks the current state of the port from Faircamp (Rust) to LoraCamp 
 
 ### Long Term
 
-- [ ] **Search/Filter**: Client-side search for large catalogs.
-- [ ] **Theme Customization**: TOML-based theme overrides.
+- [x] **Search/Filter**: Client-side search for large catalogs (Implemented via `browser.js`).
+- [x] **Theme Customization**: TOML-based theme overrides and custom.css support.
+- [x] **Python Plugin System**: Dynamic loading of custom logic.
 
 ## Technical Decisions
 
@@ -61,7 +62,7 @@ This file tracks the current state of the port from Faircamp (Rust) to LoraCamp 
 
 ## Dropped Functionality
 
-- **Live Preview Server**: Dropped in favor of simple filesystem browsing of `/yoursite/index.html`.
+- **Deployment Automation**: Porting Faircamp's `--deploy` (rsync) logic is currently deferred.
 - **Server-side i18n / Multi-language builds**: Dropped; native browser translation (Google Translate, DeepL, browser extensions) provides better coverage with zero maintenance. HTML `lang` attribute and a footer Translate link are provided instead.
 - **Dual-Format Audio Streams (Opus + MP3)**: Dropped in favor of Opus-only (96kbps). 98%+ of modern browsers support Opus natively, making the complex MP3 fallback logic and dual-storage requirements unnecessary for simple previews.
 - **Embedding Widgets (IFrames)**: Dropped, as sharing Lora previews is generally done via direct URLs rather than embedding music players on third-party sites.
@@ -70,4 +71,4 @@ This file tracks the current state of the port from Faircamp (Rust) to LoraCamp 
 - **Waveforms & Speed Controls**: Dropped. Visual audio waveforms and playback speed controls are unnecessary complexity for short model preview samples.
 
 ---
-Last Updated: 2026-03-11 (Dropped i18n)
+Last Updated: 2026-03-13 (Implemented Plugins & Preview)

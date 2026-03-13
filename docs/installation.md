@@ -27,6 +27,7 @@ LoraCamp is a Python-based tool, but we recommend using **uv** to manage your en
 Follow these steps to set up LoraCamp:
 
 1. **Clone the Repository**:
+
     ```bash
     git clone https://github.com/scruffynerf/loracamp.git
     cd loracamp
@@ -34,6 +35,7 @@ Follow these steps to set up LoraCamp:
 
 2.  **Set Up Environment (Recommended)**:
     `uv` will automatically find or install the correct Python version (3.12+) and set up a virtual environment.
+
     ```bash
     uv venv
     source .venv/bin/activate

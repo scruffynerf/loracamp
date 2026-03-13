@@ -1,5 +1,13 @@
-title = "Cool Lora"
+title = "Cool Lora Models"
 creator = "Scruffy"
-about = "This is a test Lora for verification."
+about = "This is a test Lora for verification. It includes beta testing tags and other parameters."
 trigger_word = "cool_style"
 permalink = "cool-lora"
+tags = ["beta", "style", "character"]
+release_date = "2025-01-01"
+base_model = "SDXL 1.0"
+version = "v2.5"
+sample_prompts = [
+    "A cool character standing in the rain, dramatic lighting",
+    "A cyberpunk cityscape with neon lights, cool_style"
+]

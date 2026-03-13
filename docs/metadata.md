@@ -24,12 +24,12 @@ Below is the format of the output JSON and how it maps to your `model.toml`.
 | `civitai` | Object containing `trainedWords` | See below |
 | `civitai.trainedWords` | `[trigger_word]` | Fallback to `[]` if no `trigger_word` |
 | `tags` | | *Defaults to empty list `[]`* |
-| `modelDescription`| `about` | Duplicate of `notes` for redundancy |
+| `modelDescription` | `about` | Duplicate of `notes` for redundancy |
 | `civitai_deleted` | | *Defaults to false* |
-| `favorite` |  | *Defaults to false* |
-| `exclude` |  | *Defaults to false* |
-| `db_checked` |  | *Defaults to false* |
-| `skip_metadata_refresh`| | *Defaults to false* |
+| `favorite` | | *Defaults to false* |
+| `exclude` | | *Defaults to false* |
+| `db_checked` | | *Defaults to false* |
+| `skip_metadata_refresh` | | *Defaults to false* |
 | `metadata_source` | | *Defaults to "loracamp"* |
 | `last_checked_at` | | *Defaults to 0* |
 | `usage_tips` | | *Defaults to "{}"* |

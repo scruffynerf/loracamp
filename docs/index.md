@@ -21,6 +21,3 @@ The manual is organized into *topics*, *examples* and *reference* pages.
 - [creator.toml Reference](ref-creator.md)
 - [model.toml Reference](ref-model.md)
 - [sample.toml Reference](ref-sample.md)
-
----
-*Note: This documentation is being ported and adapted from the original `faircamp` manual.*

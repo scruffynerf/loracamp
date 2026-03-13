@@ -58,7 +58,9 @@ Long-form content for the homepage (supports Markdown). Usually appears after th
 
 ```toml
 about = """
+
 ## Welcome to my Lora collection
+
 All models here are trained on custom datasets...
 """
 ```
@@ -89,6 +91,38 @@ accent_chroma = 80 # 0-100
 round_corners = true
 ```
 
+### `loracamp_signature` (Optional)
+
+Toggle to disable the LoraCamp footer credits. Default is `true`.
+
+```toml
+loracamp_signature = false
+```
+
+### `multiplecreators_mode` (Optional)
+
+Enable support for multiple creators per model/sample. Default is `false`.
+
+```toml
+multiplecreators_mode = true
+```
+
+### `preview_format` (Optional)
+
+The default image format for preview extractions (e.g. `jpg`, `webp`). Default is `jpg`.
+
+```toml
+preview_format = "webp"
+```
+
+### `favicon` (Optional)
+
+Path to a favicon image.
+
+```toml
+favicon = "favicon.png"
+```
+
 ### `site_assets` & `site_metadata` (Advanced)
 
 Include custom CSS/JS in the build and the `<head>` section.
@@ -102,15 +136,24 @@ site_metadata = """
 """
 ```
 
+### `opengraph` (Optional)
+
+LoraCamp automatically generates OpenGraph and Twitter card metadata for every page.
+
+- `opengraph = false` (Boolean): Disable all social metadata injection.
+- `[opengraph]` (Table): Provide global overrides for `title`, `description`, and `image`.
+
+Default is `true`.
+
+### `feeds` (Optional)
+
+RSS 2.0 (`feed.rss`) and Atom 1.0 (`feed.atom`) are automatically generated if `base_url` is set.
+
+- `feeds = false` (Boolean): Disable feed generation.
+
+Default is `true`.
+
 ---
-
-## Implemented Features (Ported from Faircamp)
-
-| Field | Description |
-| :--- | :--- |
-| `feeds` | RSS 2.0 (`feed.rss`) and Atom 1.0 (`feed.atom`) generated at site root when `base_url` is set. Feed discovery `<link>` tags included in `base.html`. |
-| `opengraph` | `og:title`, `og:description`, `og:image`, `og:url`, and `twitter:card` injected per-page via `base.html`. |
-| `loracamp_signature` | Toggle to disable the LoraCamp footer credits. Set `loracamp_signature = false`. |
 
 ## Pending Implementation (Faircamp Gaps)
 
@@ -121,8 +164,6 @@ The following features from Faircamp's `catalog.eno` are not yet implemented in 
 | `cache_optimization` | Advanced control over asset purging (`delayed`, `immediate`, `wipe`). |
 | `rotate_download_urls` | Logic for randomizing download URLs on every build. |
 | `freeze_download_urls` | Manual randomization of download URLs for anti-hotlinking. |
-| `label_mode` | Multi-artist support where the homepage shows a roster instead of a single creator. |
-| `feature_support_artists`| Logic for linking guest creators to their own pages. |
 
 ---
 *Note: This is an evolving reference based on Faircamp's feature set.*

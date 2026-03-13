@@ -39,8 +39,12 @@ CATALOG_SCHEMA = tomlval.TOMLSchema({
     "theme?.round_corners": is_bool,
     "site_assets?": is_list,
     "site_metadata?": is_string,
+    "multiplecreators_mode?": is_bool,
+    "opengraph?": is_bool,
+    "feeds?": is_bool,
     "loracamp_signature?": is_bool,
     "preview_format?": is_string,
+    "favicon?": is_string,
 })
 
 CREATOR_SCHEMA = tomlval.TOMLSchema({
@@ -49,7 +53,10 @@ CREATOR_SCHEMA = tomlval.TOMLSchema({
     "permalink?": is_string,
     "about?": is_string,
     "image?": is_string,
+    "image_description?": is_string,
+    "copy_link?": is_bool,
     "links?": is_dict,
+    "opengraph?": is_dict,
 })
 
 MODEL_SCHEMA = tomlval.TOMLSchema({
@@ -66,18 +73,23 @@ MODEL_SCHEMA = tomlval.TOMLSchema({
     "unlisted?": is_bool,
     "base_model?": is_string,
     "version?": is_string,
+    "permalink?": is_string,
     "sample_prompts?": is_list,
+    "tags?": is_list,
     "extras?": is_list,
     "preview_format?": is_string,
+    "copy_link?": is_bool,
     "links?": is_list,
     "links?[].label": is_string,
     "links?[].url": is_string,
+    "opengraph?": is_dict,
 })
 
 SAMPLE_SCHEMA = tomlval.TOMLSchema({
     "title": is_string,
     "creator?": is_string,
     "creators?": is_list,
+    "tags?": is_list,
     "sample_number?": is_int,
     "file?": is_string,
     "about?": is_string,
@@ -108,9 +120,15 @@ SAMPLE_SCHEMA = tomlval.TOMLSchema({
     "llm_top_k?": is_int,
     "llm_min_p?": is_float,
     "llm_rep_penalty?": is_float,
+    "copy_link?": is_bool,
+    "sample_extras?": is_list,
+    "cover?": is_string,
+    "preview?": is_string,
+    "external_page?": is_string,
     "links?": is_list,
     "links?[].label": is_string,
     "links?[].url": is_string,
+    "opengraph?": is_dict,
 })
 
 VALIDATORS = {

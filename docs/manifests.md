@@ -36,6 +36,7 @@ This file contains site-wide settings.
 title = "My Model Collection"
 creator = "Scruffy"
 base_url = "https://loracamp.example.com"
+
 # cdn_url = "https://cdn.example.com" # Optional
 ```
 
@@ -52,4 +53,3 @@ about = "This model produces high-contrast, cinematic images."
 ```
 
 ---
-

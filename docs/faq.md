@@ -2,12 +2,13 @@
 
 ## Why does LoraCamp transcode my audio files?
 
-When you build your catalog, LoraCamp automatically transcodes your source audio files (like WAV or FLAC) into optimized formats (currently MP3).
+When you build your catalog, LoraCamp automatically transcodes your source audio files (like WAV or FLAC) into optimized formats (currently **Opus** at 96kbps VBR).
 
 The reasons for this are:
-1.  **Web Compatibility**: Not all browsers support every audio format natively. MP3 is a universal standard.
-2.  **Streaming Efficiency**: We transcode to a bitrate optimized for web streaming to ensure fast loading times and reduced bandwidth usage for your visitors.
-3.  **Metadata Bundling**: During the transcoding process, LoraCamp can inject metadata (like the Model title and Creator name) directly into the audio files.
+
+1. **Modern Web Efficiency**: Opus provides superior audio quality at lower bitrates compared to MP3 or AAC, ensuring fast loading times for your visitors.
+2. **Loudness Normalization**: LoraCamp applies EBU R128 loudness normalization (targeted at -16 LUFS) so all samples across your catalog have a consistent volume level.
+3. **Metadata Cleaning**: During transcoding, LoraCamp strips all existing metadata and injects a clean set of tags (Title and Artist) directly into the Opus files.
 
 ## How are Safetensors handled?
 

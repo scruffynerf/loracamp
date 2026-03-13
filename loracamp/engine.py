@@ -26,6 +26,7 @@ class LoraCampEngine:
         self.exclude_patterns = exclude_patterns or []
         self.creator_aliases: Dict[str, str] = {}
         self.theme_css: str = ""
+        self.has_custom_css: bool = False
         
         # Set up explicit output folders for clarity
         self.site_dir = output_dir / "yoursite"
@@ -37,10 +38,48 @@ class LoraCampEngine:
         # Initialize Jinja2
         template_dir = Path(__file__).parent / "templates"
         self.env = Environment(loader=FileSystemLoader(str(template_dir)))
+        
+        # Register custom filters
+        import markdown
+        self.env.filters["markdown"] = lambda t: markdown.markdown(t or "", extensions=['extra'])
     
+    
+    def _load_plugins(self):
+        """Dynamically load Python files from the plugins/ directory."""
+        plugins_dir = Path.cwd() / "plugins"
+        if not plugins_dir.exists():
+            return
+
+        import importlib.util
+        import sys
+        
+        print("Loading plugins...")
+        for f in plugins_dir.glob("*.py"):
+            if f.name == "__init__.py":
+                continue
+                
+            try:
+                module_name = f"loracamp_plugin_{f.stem}"
+                spec = importlib.util.spec_from_file_location(module_name, f)
+                if spec and spec.loader:
+                    loader = spec.loader
+                    module = importlib.util.module_from_spec(spec)
+                    sys.modules[module_name] = module
+                    loader.exec_module(module)  # type: ignore
+                    
+                    # Call register hook if exists
+                    if hasattr(module, "register"):
+                        module.register(self)
+                    print(f"  Loaded: {f.name}")
+            except Exception as e:
+                print(f"  FAILED to load plugin {f.name}: {e}")
+
     def build(self):
         print(f"Building LoraCamp site in {self.site_dir}...")
         
+        # 0. Load Plugins
+        self._load_plugins()
+
         # 1. Setup directories
         self.site_dir.mkdir(parents=True, exist_ok=True)
         if self.cdn_url:
@@ -48,6 +87,20 @@ class LoraCampEngine:
         
         # 2. Copy static assets
         copy_static_assets(self.site_dir)
+        
+        # 2b. Check for custom.css in catalog_dir
+        custom_css_path = self.catalog_dir / "custom.css"
+        if custom_css_path.exists():
+            import shutil
+            dest = self.site_dir / "static" / "css" / "custom.css"
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(custom_css_path, dest)
+            self.has_custom_css = True
+            print(f"  Detected custom.css, copying to static assets...")
+        
+        self.env.globals["has_custom_css"] = self.has_custom_css
+        self.env.globals["enable_opengraph"] = True # Default
+        self.env.globals["enable_feeds"] = True   # Default
         
         # 3. Parse Global Catalog
         catalog_manifest_path = self.catalog_dir / "catalog.toml"
@@ -61,6 +114,8 @@ class LoraCampEngine:
                     print(f"  - {key}: {err}")
                 return # Abort build on catalog error
             catalog = parse_catalog(catalog_manifest_path)
+            self.env.globals["enable_opengraph"] = catalog.opengraph if isinstance(catalog.opengraph, bool) else True
+            self.env.globals["enable_feeds"] = catalog.feeds if isinstance(catalog.feeds, bool) else True
 
         # 3b. Generate theme CSS from catalog config
         theme_config = getattr(catalog, "theme", None) if catalog else None
@@ -125,22 +180,27 @@ class LoraCampEngine:
                 c_manifest = CreatorManifest(title=c_name)
                 creators.append({
                     "manifest": c_manifest,
-                    "dir": self.catalog_dir / c_name
+                    "dir": self.catalog_dir / str(c_name)
                 })
                 known_creators.add(c_name)
 
-        # 5. Render Index
-        self.render_index(catalog, models)
+        # 7. Generate Search Data
+        search_data = self._prepare_search_data(catalog, models, creators)
 
-        # 6. Render Creator pages
+        # 8. Render Index
+        self.render_index(catalog, models, search_data)
+
+        # 9. Render Creator pages
         for creator_data in creators:
-            self.render_creator_page(creator_data, catalog, models)
+            self.render_creator_page(creator_data, catalog, models, search_data)
 
-        # 7. Generate Feeds (Atom + RSS)
-        base_url: str = getattr(catalog, "base_url", None) or ""
-        if base_url:
+        # 10. Generate Feeds (Atom + RSS)
+        base_url = getattr(catalog, "base_url", None) or ""
+        if base_url and catalog and catalog.feeds is not False:
             generate_atom_feed(catalog, models, base_url, self.site_dir / "feed.atom")
             generate_rss_feed(catalog, models, base_url, self.site_dir / "feed.rss")
+        elif base_url and catalog and catalog.feeds is False:
+            print("  Skipping feed generation: disabled in catalog.toml")
         else:
             print("  Skipping feed generation: no base_url set in catalog.toml")
         
@@ -344,6 +404,8 @@ class LoraCampEngine:
                     continue
                 if f.name.startswith("."):
                     continue
+                if target_preview and f == target_preview:
+                    continue
                 extras.append(f)
         
         # Add explicit extras from manifest if they exist and haven't been added
@@ -354,8 +416,8 @@ class LoraCampEngine:
 
         # 5. Prepare Download Links (Replaced ZIP bundling)
         downloads: List[Dict[str, Any]] = [
-            {"label": f"Download Model ({model_filename})", "url": model_url, "is_zip": False, "primary": True},
-            {"label": "Download Metadata (JSON)", "url": metadata_filename, "is_zip": False, "primary": False}
+            {"label": "Download Model", "url": model_url, "is_zip": False, "primary": True},
+            {"label": "Download Metadata", "url": metadata_filename, "is_zip": False, "primary": False}
         ]
         
         if preview_url:
@@ -370,8 +432,14 @@ class LoraCampEngine:
             shutil.copy2(extra_f, extra_dest)
             downloads.append({"label": f"Download Extra ({extra_f.name})", "url": extra_f.name, "is_zip": False, "primary": False})
 
-        # 6. Render Detail Page
-        self.render_model_page(model_manifest, samples, model_url, preview_url, video_url, downloads, model_site_dir)
+        # 6. Prepare Search Data
+        # (This is now handled at the end of run() and passed back during re-rendering if needed, 
+        # but for individual model pages we might need it passed in)
+        
+        # 7. Render Detail Page
+        # Note: render_model_page will be called again in run() if we want search_data everywhere,
+        # but actually we can just update render_model_page signature.
+        self.render_model_page(model_manifest, samples, model_url, preview_url, video_url, downloads, model_site_dir, catalog=catalog)
 
         # Build list of creators for the index
         display_creator = model_manifest.creator
@@ -387,17 +455,32 @@ class LoraCampEngine:
             "video_url": video_url,
             "display_creator": display_creator,
             "dir": model_dir,
-            "slug": model_slug
+            "slug": model_slug,
+            "samples": samples
         }
 
     def process_sample(self, audio_file: Path, model_slug: str, model_manifest: ModelManifest):
         from .media import transcode_audio, get_audio_duration, extract_mp3_metadata
         import json
         
-        # Look for sample manifest (audio_file.stem + ".toml")
-        manifest_path = audio_file.with_suffix(".toml")
+        # Look for sample manifest in order of priority:
+        # 1. <filename>.sample.toml
+        # 2. <filename>.toml
+        # 3. sample.toml (if in a subfolder)
+        candidates = [
+            audio_file.parent / (audio_file.stem + ".sample.toml"),
+            audio_file.with_suffix(".toml"),
+            audio_file.parent / "sample.toml"
+        ]
+        
+        manifest_path = None
+        for cand in candidates:
+            if cand.exists():
+                manifest_path = cand
+                break
+                
         sample_manifest = None
-        if manifest_path.exists():
+        if manifest_path:
             data = load_toml(manifest_path)
             errors = validate_manifest("sample.toml", data)
             if errors:
@@ -497,16 +580,60 @@ class LoraCampEngine:
             sample_url = f"samples/{transcode_dest.name}"
             if workflow_url:
                 workflow_url = f"samples/{Path(workflow_url).name}"
-            
+        
+        # Discover per-sample cover art
+        cover_url = None
+        image_extensions = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+        sample_dir = audio_file.parent
+        
+        # 1. Explicit cover field in sample manifest
+        if sample_manifest and sample_manifest.cover:
+            cover_file = sample_dir / sample_manifest.cover
+            if cover_file.exists() and cover_file.suffix.lower() in image_extensions:
+                cover_url = self._copy_sample_cover(cover_file, model_slug, audio_file.stem)
+        
+        # 2. Same-stem image (e.g. demo_1.jpg for demo_1.mp3)
+        if not cover_url:
+            for ext in image_extensions:
+                candidate = audio_file.with_suffix(ext)
+                if candidate.exists():
+                    cover_url = self._copy_sample_cover(candidate, model_slug, audio_file.stem)
+                    break
+        
+        # 3. preview.* or cover.* in the same directory
+        if not cover_url:
+            for f in sorted(sample_dir.iterdir()):
+                if f.is_file() and f.stem.lower() in ("cover", "preview") and f.suffix.lower() in image_extensions:
+                    cover_url = self._copy_sample_cover(f, model_slug, audio_file.stem)
+                    break
+
         return {
-            "name": audio_file.stem,
+            "name": sample_title,
             "url": sample_url,
             "duration": duration,
             "manifest": sample_manifest,
-            "workflow_url": workflow_url
+            "workflow_url": workflow_url,
+            "cover_url": cover_url,
+            "external_page": sample_manifest.external_page if sample_manifest else None,
         }
 
-    def render_model_page(self, model_manifest: ModelManifest, samples: List[Dict], model_url: str, preview_url: Optional[str], video_url: Optional[str], downloads: List[Dict], output_dir: Path, catalog: Optional[CatalogManifest] = None):
+    def _copy_sample_cover(self, cover_file: Path, model_slug: str, sample_stem: str) -> Optional[str]:
+        """Copy a sample cover image to the output and return its URL relative to the model page."""
+        import shutil
+        dest_name = f"{sample_stem}_cover{cover_file.suffix.lower()}"
+        if self.cdn_url:
+            dest = self.asset_dir / model_slug / "samples" / dest_name
+        else:
+            dest = self.site_dir / model_slug / "samples" / dest_name
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(cover_file, dest)
+        
+        cdn_url = self.cdn_url
+        if cdn_url:
+            return f"{cdn_url.rstrip('/')}/{model_slug}/samples/{dest_name}"
+        return f"samples/{dest_name}"
+
+    def render_model_page(self, model_manifest: ModelManifest, samples: List[Dict], model_url: str, preview_url: Optional[str], video_url: Optional[str], downloads: List[Dict], output_dir: Path, catalog: Optional[CatalogManifest] = None, search_data: Optional[Dict] = None):
         try:
             template = self.env.get_template("model.html")
         except Exception:
@@ -514,7 +641,7 @@ class LoraCampEngine:
 
         base_url = getattr(catalog, "base_url", None) or ""
         model_slug = output_dir.name
-        og_custom = model_manifest.opengraph or {}
+        og_custom = model_manifest.opengraph if isinstance(model_manifest.opengraph, dict) else {}
         og_title = og_custom.get("title") or model_manifest.title
         og_description = og_custom.get("description") or model_manifest.synopsis or (model_manifest.about or "")[:256]
         
@@ -522,6 +649,13 @@ class LoraCampEngine:
             og_image = f"{base_url}/{model_slug}/{og_custom['image'].lstrip('/')}"
         else:
             og_image = f"{base_url}/{model_slug}/{preview_url}" if base_url and preview_url else ""
+            
+        try:
+            rel_path = output_dir.relative_to(self.site_dir)
+            depth = len(rel_path.parts)
+        except ValueError:
+            depth = 1
+        computed_relative_root = "../" * depth if depth > 0 else "./"
             
         content = template.render(
             model=model_manifest,
@@ -532,21 +666,23 @@ class LoraCampEngine:
             downloads=downloads,
             catalog=catalog,
             base_url=base_url,
+            relative_root=computed_relative_root,
             theme_css=self.theme_css,
             og_title=og_title,
             og_description=og_description,
             og_image=og_image,
             og_url=f"{base_url}/{model_slug}/" if base_url else "",
             og_type="article",
+            search_data=search_data,
         )
         with open(output_dir / "index.html", "w") as f:
             f.write(content)
 
-    def render_index(self, catalog: Optional[CatalogManifest], models: List[Dict]):
+    def render_index(self, catalog: Optional[CatalogManifest], models: List[Dict], search_data: Optional[Dict] = None):
         template = self.env.get_template("index.html")
         base_url = getattr(catalog, "base_url", None) or ""
         
-        og_custom = getattr(catalog, "opengraph", {}) if catalog else {}
+        og_custom = catalog.opengraph if catalog and isinstance(catalog.opengraph, dict) else {}
         og_title = og_custom.get("title") or getattr(catalog, "title", None)
         og_description = og_custom.get("description") or getattr(catalog, "synopsis", None)
         
@@ -561,17 +697,19 @@ class LoraCampEngine:
             catalog=catalog,
             models=models,
             base_url=base_url,
+            relative_root="./",
             theme_css=self.theme_css,
             og_title=og_title,
             og_description=og_description,
             og_image=og_image,
             og_url=base_url + "/" if base_url else "",
             og_type="website",
+            search_data=search_data,
         )
         with open(self.site_dir / "index.html", "w") as f:
             f.write(content)
 
-    def render_creator_page(self, creator_data: Dict, catalog: Optional[CatalogManifest], all_models: List[Dict]):
+    def render_creator_page(self, creator_data: Dict, catalog: Optional[CatalogManifest], all_models: List[Dict], search_data: Optional[Dict] = None):
         """Render a creator's own page with their profile and model list."""
         if not creator_data:
             return
@@ -646,7 +784,7 @@ class LoraCampEngine:
                 template = self.env.get_template("creator.html")
             except Exception:
                 return
-            og_custom = manifest.opengraph or {}
+            og_custom = manifest.opengraph if isinstance(manifest.opengraph, dict) else {}
             og_title = og_custom.get("title") or creator_name
             og_description = og_custom.get("description") or getattr(manifest, "synopsis", None)
             
@@ -655,22 +793,99 @@ class LoraCampEngine:
             else:
                 og_image = f"{base_url}/{creator_slug}/{creator_image_url}" if base_url and creator_image_url else ""
                 
+            try:
+                rel_path = creator_site_dir.relative_to(self.site_dir)
+                depth = len(rel_path.parts)
+            except ValueError:
+                depth = 1
+            computed_relative_root = "../" * depth if depth > 0 else "./"
+                
             content = template.render(
                 catalog=catalog,
                 creator=manifest,
                 models=creator_models,
                 creator_image_url=creator_image_url,
                 base_url=base_url,
+                relative_root=computed_relative_root,
                 theme_css=self.theme_css,
                 og_title=og_title,
                 og_description=og_description,
                 og_image=og_image,
                 og_url=f"{base_url}/{creator_slug}/" if base_url else "",
                 og_type="profile",
+                search_data=search_data,
             )
         with open(creator_site_dir / "index.html", "w") as f:
             f.write(content)
         print(f"  Creator page: /{creator_slug}/")
+
+    def _prepare_search_data(self, catalog: Optional[CatalogManifest], models: List[Dict], creators: List[Dict]) -> Dict:
+        """Prepare a JSON-serializable structure for the frontend search."""
+        search_models = []
+        for m in models:
+            m_manifest = m["manifest"]
+            m_slug = m["slug"]
+            
+            search_model = {
+                "title": m_manifest.title or m_slug,
+                "url": f"{m_slug}/",
+                "cover": m.get("preview_url") or "",
+                "tags": getattr(m_manifest, "tags", []) or [],
+                "tracks": []
+            }
+            
+            # Since m["manifest"] might not have samples (they are discovered by engine),
+            # we should really be getting the samples from somewhere.
+            # In run(), after processing each model, we have the model data.
+            # However, my run() loop doesn't store the samples in the 'models' list yet.
+            # Let's check process_model again.
+            
+            # Actually, process_model doesn't return samples in its results dict.
+            # I should fix that first or find another way.
+            
+            # Re-evaluating: I'll update process_model to return samples.
+            if "samples" in m:
+                for i, s in enumerate(m["samples"]):
+                    s_manifest = s.get("manifest")
+                    s_tags = getattr(s_manifest, "tags", []) if s_manifest else []
+                    search_model["tracks"].append({
+                        "title": s["name"],
+                        "url": f"{m_slug}/",
+                        "cover": s.get("cover_url") or "",
+                        "tags": s_tags or [],
+                        "number": str(i + 1)
+                    })
+            
+            search_models.append(search_model)
+            
+        search_creators = []
+        for c in creators:
+            c_manifest = c["manifest"]
+            # Compute slug similar to render_creator_page
+            c_slug = c_manifest.permalink
+            if not c_slug:
+                c_dir = c.get("dir")
+                if c_dir and c_dir != self.catalog_dir:
+                    try:
+                        rel_path = c_dir.relative_to(self.catalog_dir)
+                        c_slug = str(rel_path)
+                    except ValueError:
+                        c_slug = c_dir.name
+                else:
+                    c_slug = c_manifest.name or c_manifest.title or "creator"
+            
+            c_slug = c_slug.lower().replace(" ", "-")
+            
+            search_creators.append({
+                "name": c_manifest.name or c_manifest.title,
+                "url": f"{c_slug}/",
+                "image": getattr(c_manifest, "image", "") or ""
+            })
+            
+        return {
+            "models": search_models,
+            "creators": search_creators
+        }
 
     def process_creator(self, creator_dir: Path):
         manifest_path = creator_dir / "creator.toml"

@@ -1,0 +1,7 @@
+title = "The Cool Test Sample"
+tags = ["beta", "gamma", "test"]
+prompt = "A high-quality 4k cool image of a character."
+cfg = 6.0
+steps = 25
+model = "SD 1.5"
+seed = 424242

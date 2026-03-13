@@ -1,6 +1,6 @@
 # creator.toml Reference
 
-Creators are defined to provide profiles for the people or groups who make the models and samples. 
+Creators are defined to provide profiles for the people or groups who make the models and samples.
 
 ## Profile Structure
 
@@ -19,42 +19,65 @@ instagram = "https://instagram.com/photographyexpert"
 ## Options
 
 ### `name`
+
 The display name of the Creator. This is matched against the `creator` field in Model and Sample manifests.
 
+### `aliases` (Optional)
+
+A list of alternative names for this creator. Used to match against model creators during indexing.
+
+```toml
+aliases = ["Artisan", "A. Studios"]
+```
+
 ### `permalink` (Optional)
+
 The URL slug for the creator page. If omitted, the directory name is used.
 
 ### `about` (Optional)
+
 A short biography or description of the creator. Supports Markdown.
 
 ### `image` (Optional)
+
 A path to a profile image.
+
 ```toml
 image = "profile.jpg"
 ```
 
+### `image_description` (Optional)
+
+Alt text for the profile image. If omitted, the creator's name is used.
+
+```toml
+image_description = "A portrait photo of the creator"
+```
+
+### `copy_link` (Optional)
+
+Whether to show the "Copy Link" button on the creator page. Defaults to `true`.
+
+```toml
+copy_link = false
+```
+
 ### `links` (Optional)
+
 A table of social media or external links.
+
 ```toml
 [links]
 GitHub = "https://github.com/..."
 Twitter = "https://twitter.com/..."
 ```
 
----
+### `opengraph` (Optional)
 
-## Pending Implementation (Faircamp Gaps)
+Provide page-specific overrides for OpenGraph tags.
 
-The following features from Faircamp's `artist.eno` are not yet implemented in LoraCamp:
-
-| Field | Description |
-| :--- | :--- |
-| `aliases` | Mapping multiple name variations to one creator identity. |
-| `verification`| Support for `rel="me"` links for social profile verification. |
-| `external_page`| Redirecting a creator profile to an external URL. |
-| `m3u` | Generation of an M3U playlist for all of a creator's samples. |
-| `image description`| Explicit alt-text field for the profile image. |
-| `copy_link` | Toggle to disable the "Copy Link" button on the creator page. |
-
----
-*Note: This is adapted from Faircamp's artist options.*
+```toml
+[opengraph]
+title = "My Portfolio"
+description = "A gallery of my best works."
+```

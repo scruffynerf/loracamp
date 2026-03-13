@@ -6,6 +6,22 @@
     {% if catalog and catalog.synopsis %}
     <p class="synopsis">{{ catalog.synopsis }}</p>
     {% endif %}
+
+    {% if catalog and catalog.links %}
+    <nav class="catalog-links">
+        {% for link in catalog.links %}
+        <a href="{{ link.url }}" class="pill-link" {% if link.url.startswith('http') %}target="_blank" rel="noopener"{% endif %}>
+            {{ link.label or link.url }}
+        </a>
+        {% endfor %}
+    </nav>
+    {% endif %}
+
+    {% if catalog and catalog.about %}
+    <section class="catalog-about">
+        <div class="text">{{ catalog.about | markdown }}</div>
+    </section>
+    {% endif %}
 </header>
 
 <main class="page_grid">

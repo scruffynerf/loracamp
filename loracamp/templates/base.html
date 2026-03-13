@@ -5,33 +5,57 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{{ catalog.title if catalog else "LoraCamp" }}{% endblock %}</title>
-    <link rel="stylesheet" href="/static/css/site.css">
+    <link rel="stylesheet" href="{{ relative_root }}static/css/site.css">
     {{ theme_css | safe }}
+    {% if has_custom_css %}
+    <link rel="stylesheet" href="{{ relative_root }}static/css/custom.css">
+    {% endif %}
 
     {# OpenGraph / Social meta tags — injected per page #}
+    {% if enable_opengraph %}
     {% if og_title %}<meta property="og:title" content="{{ og_title }}">{% endif %}
     {% if og_description %}<meta property="og:description" content="{{ og_description }}">{% endif %}
     {% if og_image %}<meta property="og:image" content="{{ og_image }}">{% endif %}
     {% if og_url %}<meta property="og:url" content="{{ og_url }}">{% endif %}
     <meta property="og:type" content="{{ og_type | default('website') }}">
     {% if og_title %}<meta name="twitter:card" content="summary_large_image">{% endif %}
+    {% endif %}
 
     {# Feed discovery #}
-    {% if base_url %}
+    {% if enable_feeds and base_url %}
     <link rel="alternate" type="application/atom+xml" title="{{ catalog.title if catalog else 'LoraCamp' }} – Atom Feed" href="{{ base_url }}/feed.atom">
     <link rel="alternate" type="application/rss+xml" title="{{ catalog.title if catalog else 'LoraCamp' }} – RSS Feed" href="{{ base_url }}/feed.rss">
     {% endif %}
 
     {% block head %}{% endblock %}
+    <script type="text/javascript">
+        const storedTheme = localStorage.getItem('loracamp_theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        // Apply explicitly saved theme immediately to prevent FOUC
+        if (storedTheme === 'dark' || (!storedTheme && prefersDark)) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        } else if (storedTheme === 'light' || (!storedTheme && !prefersDark)) {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+    </script>
 </head>
-
 <body class="layout">
     <header>
         <div class="header-container">
-            <a id="logo" href="/index.html">
+            <a id="logo" href="{{ relative_root }}index.html">
                 <span class="logo-icon">🔗</span>
                 <span class="site-title">{{ catalog.title if catalog else "LoraCamp" }}</span>
             </a>
+            <div class="header-actions">
+                <button class="browse-btn theme-toggle" onclick="toggleTheme()" aria-label="Toggle Light/Dark Theme">
+                    <span class="theme-icon">🌓</span>
+                </button>
+                <button class="browse-btn" onclick="showBrowser(this)">
+                    <span>Search</span>
+                    <span class="search-icon">🔍</span>
+                </button>
+            </div>
         </div>
     </header>
 
@@ -44,6 +68,13 @@
             {% if (catalog and catalog.loracamp_signature) or not catalog %}
             <span class="loracamp_signature">Built with LoraCamp</span>
             {% endif %}
+            <button class="browse-btn footer-browse theme-toggle" onclick="toggleTheme()" aria-label="Toggle Light/Dark Theme">
+                <span class="theme-icon">🌓</span>
+            </button>
+            <button class="browse-btn footer-browse" onclick="showBrowser(this)">
+                <span>Search</span>
+                <span class="search-icon">🔍</span>
+            </button>
             <a id="translate-link" class="translate-link" href="https://translate.google.com/" target="_blank" rel="noopener" title="Translate this page">🌐 Translate</a>
             <script>document.getElementById('translate-link').href='https://translate.google.com/translate?u='+encodeURIComponent(window.location.href);</script>
         </div>
@@ -122,7 +153,33 @@
     </div>
     <div aria-label="" class="docked_player_status" role="status"></div>
 
+    <div id="browser" data-root-prefix="{{ relative_root }}">
+        <div class="browser-content">
+            <div class="browser-header">
+                <input autocomplete="off" placeholder="Search models, samples, creators..." type="search" id="search-input">
+                <div role="status" id="search-status"></div>
+                <button class="close-browser" onclick="hideBrowser()">
+                    <svg width="1em" height="1em" viewBox="0 0 64 64"><path d="M12 12 L52 52 M52 12 L12 52" stroke="currentColor" stroke-width="8" fill="none"/></svg>
+                </button>
+            </div>
+            <div id="results"></div>
+        </div>
+    </div>
+
     <script>
+        // Search Data injected by Engine
+        const CREATORS = {{ (search_data.creators if search_data else []) | tojson | safe }};
+        const MODELS = {{ (search_data.models if search_data else []) | tojson | safe }};
+        const LABEL_MODE = true; // LoraCamp generally shows creators
+        
+        // Translations/Strings
+        const BROWSER_JS_T = {
+            nothingFoundForXxx: (query) => `Nothing found for "${query}"`,
+            showingFeaturedItems: "Showing all items",
+            showingXxxResultsForXxx: (count, query) => `Showing ${count} results for "${query}"`,
+            xxxAndOthers: (xxx, othersLink) => `${xxx} and others`
+        };
+
         // Translations expected by player.js
         const PLAYER_JS_T = {
             listen: "Listen",
@@ -138,8 +195,23 @@
             xxxHours: (h) => `${h} hours`
         };
     </script>
-    <script src="/static/js/player.js"></script>
-    <script src="/static/js/browser.js"></script>
+    <script src="{{ relative_root }}static/js/player.js"></script>
+    <script src="{{ relative_root }}static/js/browser.js"></script>
+    <script>
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            let newTheme = 'dark';
+            if (currentTheme === 'dark') {
+                newTheme = 'light';
+            } else if (currentTheme === 'light') {
+                newTheme = 'dark';
+            } else {
+                newTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'light' : 'dark';
+            }
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('loracamp_theme', newTheme);
+        }
+    </script>
 </body>
 
 </html>

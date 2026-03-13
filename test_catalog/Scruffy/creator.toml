@@ -1,7 +1,17 @@
-name = "ComfyUI Enthusiasts"
-aliases = ["CUE"]
-about = "A group dedicated to testing and pushing the limits of generative audio and image workflows."
+name = "Scruffy"
+aliases = ["ComfyUI Enthusiasts", "CUE"]
+synopsis = "Masters of the latent space and node-based wizardry."
+image = "profile.png"
+about = "A group dedicated to testing and pushing the limits of generative audio and image workflows. We specialize in custom Lora models and highly optimized ComfyUI pipelines."
 
 [[links]]
 label = "Group Repo"
 url = "https://github.com/comfyanonymous/ComfyUI"
+
+[[links]]
+label = "Discord"
+url = "https://discord.gg/comfyui"
+
+[[links]]
+label = "Civitai"
+url = "https://civitai.com"

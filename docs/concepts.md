@@ -25,4 +25,3 @@ A **static** website is written once, ahead of time. It's just a collection of s
 **LoraCamp** is the tool (the static site generator) you use to "write the book" for your model collection.
 
 ---
-

@@ -30,4 +30,3 @@ By default, LoraCamp will write the site to a `yoursite/` folder (and optionally
 Unlike the original `faircamp`, LoraCamp does **not** include a built-in "live preview" server. To view your site, simply open the `index.html` file in the `yoursite/` directory with your preferred web browser.
 
 ---
-

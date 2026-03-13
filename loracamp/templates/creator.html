@@ -18,7 +18,7 @@
 
     {% if creator_image_url %}
     <div class="creator-image-wrap">
-        <img src="{{ creator_image_url }}" alt="{{ creator.name }}" class="creator-image">
+        <img src="{{ creator_image_url }}" alt="{{ creator.image_description or creator.name }}" class="creator-image">
     </div>
     {% endif %}
 
@@ -36,6 +36,14 @@
         </a>
         {% endfor %}
     </nav>
+    {% endif %}
+
+    {% if creator.copy_link %}
+    <div class="actions secondary">
+        <button id="copyLinkBtn" class="button action-btn" data-copy="{{ og_url or '' }}">
+            <span class="icon">🔗</span> Copy Link
+        </button>
+    </div>
     {% endif %}
 </header>
 

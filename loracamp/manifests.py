@@ -1,6 +1,6 @@
 import tomli
 from dataclasses import dataclass, field
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Union
 from pathlib import Path
 
 @dataclass
@@ -9,7 +9,8 @@ class BaseModel:
     synopsis: Optional[str] = None
     more: Optional[str] = None
     links: List[Dict[str, str]] = field(default_factory=list)
-    opengraph: Dict[str, str] = field(default_factory=dict)
+    opengraph: Union[bool, Dict[str, str]] = field(default_factory=dict)
+    feeds: Union[bool, Dict[str, str]] = field(default_factory=dict)
 
 @dataclass
 class CatalogManifest(BaseModel):
@@ -24,6 +25,8 @@ class CatalogManifest(BaseModel):
     site_assets: List[str] = field(default_factory=list)
     site_metadata: Optional[str] = None
     multiplecreators_mode: bool = False
+    opengraph: Union[bool, Dict[str, str]] = True
+    feeds: Union[bool, Dict[str, str]] = True
     preview_format: str = "jpg" # default format for previews
 
 @dataclass
@@ -40,9 +43,11 @@ class ModelManifest(BaseModel):
     unlisted: bool = False
     base_model: Optional[str] = None # e.g., "SD 1.5", "SDXL"
     version: Optional[str] = None # e.g., "v1.0"
+    tags: List[str] = field(default_factory=list)
     sample_prompts: List[str] = field(default_factory=list)
     extras: List[str] = field(default_factory=list) # Files to include in the ZIP bundle
     preview_format: Optional[str] = None # Overrides catalog default
+    copy_link: bool = True # Toggle to show/hide the "Copy Link" button
 
 @dataclass
 class CreatorManifest(BaseModel):
@@ -51,16 +56,22 @@ class CreatorManifest(BaseModel):
     permalink: Optional[str] = None
     about: Optional[str] = None
     image: Optional[str] = None
+    image_description: Optional[str] = None  # Alt text for profile image
+    copy_link: bool = True  # Toggle to show/hide the "Copy Link" button
     links_dict: Dict[str, str] = field(default_factory=dict) # For the [links] table
 
 @dataclass
 class SampleManifest(BaseModel):
     creator: Optional[str] = None
     creators: List[str] = field(default_factory=list)
+    tags: List[str] = field(default_factory=list)
     sample_number: Optional[int] = None
     # In LoraCamp, samples are usually associated with a specific file
     file: Optional[str] = None
     preview: Optional[str] = None # Equivalent to 'cover' in Faircamp
+    cover: Optional[str] = None # Per-sample cover art filename
+    external_page: Optional[str] = None # Link to an external URL for the sample title
+    copy_link: bool = True # Toggle to show/hide Copy Link for this sample
     sample_extras: List[str] = field(default_factory=list) # Equivalent to 'track_extras', for per-epoch files etc.
     about: Optional[str] = None
     prompt: Optional[str] = None
@@ -99,11 +110,9 @@ def parse_catalog(path: Path) -> CatalogManifest:
 
 def parse_creator(path: Path) -> CreatorManifest:
     data = load_toml(path)
-    # the [links] table in creator.toml is a Dict[str, str] 
-    # while BaseModel.links is a List[Dict[str, str]]
-    # we'll handle this mapping if needed, but for now just pass as is
-    links = data.pop("links", {})
-    return CreatorManifest(links_dict=links, **data)
+    # the [[links]] table in TOML naturally becomes a list of dicts
+    # which matches BaseModel.links. We don't need to pop it.
+    return CreatorManifest(**data)
 
 def parse_model(path: Path) -> ModelManifest:
     data = load_toml(path)

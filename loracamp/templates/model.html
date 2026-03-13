@@ -4,8 +4,16 @@
 
 {% block content %}
 <header>
-    <a href="../index.html" class="back-link">← Back to Catalog</a>
+    <nav class="back-links" style="margin-bottom: 1rem;">
+        {% if relative_root != '../' %}
+        <a href="{{ relative_root }}index.html" class="back-link" style="margin-right: 1rem;">⌂ Catalog</a>
+        {% endif %}
+        <a href="../index.html" class="back-link">↑ {{ "Up a Level" if relative_root != '../' else "Back to Catalog" }}</a>
+    </nav>
     <h1>{{ model.title }}</h1>
+    {% if model.synopsis %}
+    <p class="synopsis">{{ model.synopsis }}</p>
+    {% endif %}
     {% if model.creator or model.creators %}
     <p class="creator">by
         {% if model.creators %}
@@ -14,6 +22,16 @@
         {{ model.creator }}
         {% endif %}
     </p>
+    {% endif %}
+
+    {% if model.links %}
+    <nav class="model-links">
+        {% for link in model.links %}
+        <a href="{{ link.url }}" class="pill-link" {% if link.url.startswith('http') %}target="_blank" rel="noopener"{% endif %}>
+            {{ link.label or link.url }}
+        </a>
+        {% endfor %}
+    </nav>
     {% endif %}
 
     <div class="specs">
@@ -53,7 +71,7 @@
             
             {% if downloads | length > 1 %}
             <button id="downloadAllBtn" class="button action-btn">
-                <span class="icon">⬇️</span> Download All ({{ downloads | length }} files)
+                <span class="icon">⬇️</span> Download All
             </button>
             <script>
                 document.getElementById('downloadAllBtn').addEventListener('click', function() {
@@ -87,6 +105,14 @@
             </script>
             {% endif %}
         </div>
+
+        {% if model.copy_link %}
+        <div class="actions secondary">
+            <button id="copyLinkBtn" class="button action-btn" data-copy="{{ og_url or '' }}">
+                <span class="icon">🔗</span> Copy Link
+            </button>
+        </div>
+        {% endif %}
     </div>
 
     <div class="model_info">
@@ -128,18 +154,29 @@
                         <span class="icon">
                             <svg width="1em" height="1em" version="1.1" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><title>Play</title><path d="m11.116 59.677 45.476-26.453-45.544-28.093z"/></svg>
                         </span>
-                        {% if preview_url %}
+                        <audio preload="none">
+                            {% set ext = sample.url.split('.')[-1].lower() %}
+                            {% if ext == 'opus' %}
+                            <source src="{{ sample.url }}" type="audio/ogg; codecs=opus">
+                            {% else %}
+                            <source src="{{ sample.url }}" type="audio/{{ ext }}">
+                            {% endif %}
+                        </audio>
+                        {% if sample.cover_url %}
+                        <img aria-hidden="true" src="{{ sample.cover_url }}">
+                        {% elif preview_url %}
                         <img aria-hidden="true" src="{{ preview_url }}">
                         {% endif %}
                     </button>
                     <div>
                         <div>
                             <span class="number">{{ loop.index }}</span>
+                            {% if sample.external_page %}
+                            <a href="{{ sample.external_page }}" class="title" target="_blank" rel="noopener">{{ sample.name }}</a>
+                            {% else %}
                             <span class="title">{{ sample.name }}</span>
+                            {% endif %}
                         </div>
-                        <audio controls preload="none">
-                            <source src="{{ sample.url }}" type="audio/mpeg">
-                        </audio>
                     </div>
                     <div>
                         <span class="time">

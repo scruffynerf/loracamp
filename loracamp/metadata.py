@@ -60,7 +60,7 @@ def generate_metadata_json(
         "civitai": {
             "trainedWords": [model_manifest.trigger_word] if model_manifest.trigger_word else []
         },
-        "tags": [],
+        "tags": model_manifest.tags or [],
         "modelDescription": model_manifest.about or "",
         "civitai_deleted": False,
         "favorite": False,

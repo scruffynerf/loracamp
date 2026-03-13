@@ -65,35 +65,37 @@ function truncateArtistList(artists, othersLink)  {
         .join(", ");
 }
 
-for (const release of RELEASES) {
-    let imgRelease;
-    if (release.cover) {
-        imgRelease = document.createElement('img');
-        imgRelease.src = rootPrefix + release.url + release.cover;
+for (const model of MODELS) {
+    let imgModel;
+    if (model.cover) {
+        imgModel = document.createElement('img');
+        imgModel.src = rootPrefix + model.url + model.cover;
     } else {
-        imgRelease = document.createElement('img');
-        imgRelease.classList.add('procedural');
-        imgRelease.src = rootPrefix + release.url + release.coverProcedural;
+        imgModel = document.createElement('span');
+        imgModel.classList.add('placeholder');
     }
 
     const aText = document.createElement('a');
-    aText.href = rootPrefix + release.url + indexSuffix;
+    aText.href = rootPrefix + model.url + indexSuffix;
 
     const aImage = aText.cloneNode(true);
     aImage.tabIndex = -1;
-    aImage.appendChild(imgRelease);
+    aImage.appendChild(imgModel);
 
     aText.dataset.searchable = 'true';
-    aText.textContent = release.title;
+    if (model.tags && model.tags.length > 0) {
+        aText.dataset.tags = model.tags.join(' ');
+    }
+    aText.textContent = model.title;
 
     const details = document.createElement('div');
     details.appendChild(aText);
 
-    if (release.artists) {
-        const artists = document.createElement('div');
-        artists.classList.add('artists');
-        artists.innerHTML = truncateArtistList(release.artists, `${rootPrefix}${release.url}`);
-        details.appendChild(artists);
+    if (model.creator) {
+        const creator = document.createElement('div');
+        creator.classList.add('artists'); // Keeping class name for CSS compatibility
+        creator.textContent = model.creator;
+        details.appendChild(creator);
     }
 
     const row = document.createElement('div');
@@ -101,13 +103,13 @@ for (const release of RELEASES) {
     row.appendChild(details);
     browseResults.appendChild(row);
 
-    for (const track of release.tracks) {
+    for (const track of model.tracks) {
         let imgTrack;
         if (track.cover) {
             imgTrack = document.createElement('img');
-            imgTrack.src = rootPrefix + track.url + track.cover;
+            imgTrack.src = rootPrefix + model.url + track.cover;
         } else {
-            imgTrack = imgRelease.cloneNode(true);
+            imgTrack = imgModel.cloneNode(true);
         }
 
         const number = document.createElement('span');
@@ -122,18 +124,14 @@ for (const release of RELEASES) {
         aImage.appendChild(imgTrack);
 
         aTitle.dataset.searchable = 'true';
+        if (track.tags && track.tags.length > 0) {
+            aTitle.dataset.tags = track.tags.join(' ');
+        }
         aTitle.textContent = track.title;
 
         const details = document.createElement('div');
         details.appendChild(number);
         details.appendChild(aTitle);
-
-        if (track.artists) {
-            const artists = document.createElement('div');
-            artists.classList.add('artists');
-            artists.innerHTML = truncateArtistList(track.artists, `${rootPrefix}${track.url}`);
-            details.appendChild(artists);
-        }
 
         const row = document.createElement('div');
         row.appendChild(aImage);
@@ -144,28 +142,26 @@ for (const release of RELEASES) {
     }
 }
 
-for (const artist of ARTISTS) {
+for (const creator of CREATORS) {
     const aText = document.createElement('a');
+    aText.href = rootPrefix + creator.url + indexSuffix;
 
-    const url = artist.externalPage ?? `${rootPrefix}${artist.url}${indexSuffix}`;
-    aText.href = url;
-
-    let imageArtist;
-    if (artist.image) {
-        imageArtist = document.createElement('img');
-        imageArtist.classList.add('crop');
-        imageArtist.src = rootPrefix + artist.url + artist.image;
+    let imageCreator;
+    if (creator.image) {
+        imageCreator = document.createElement('img');
+        imageCreator.classList.add('crop');
+        imageCreator.src = rootPrefix + creator.url + creator.image;
     } else {
-        imageArtist = document.createElement('span');
-        imageArtist.classList.add('placeholder');
+        imageCreator = document.createElement('span');
+        imageCreator.classList.add('placeholder');
     }
 
     const aImage = aText.cloneNode(true);
     aImage.tabIndex = -1;
-    aImage.appendChild(imageArtist);
+    aImage.appendChild(imageCreator);
 
     aText.dataset.searchable = 'true';
-    aText.textContent = artist.name;
+    aText.textContent = creator.name;
 
     const details = document.createElement('div');
     details.appendChild(aText);
@@ -224,10 +220,10 @@ browser.addEventListener('keydown', event => {
     }
 });
 
-browseButtonFooter.addEventListener('click', () => showBrowser(browseButtonFooter));
-browseButtonHeader.addEventListener('click', () => showBrowser(browseButtonHeader));
+browseButtonFooter?.addEventListener('click', () => showBrowser(browseButtonFooter));
+browseButtonHeader?.addEventListener('click', () => showBrowser(browseButtonHeader));
 
-closeButton.addEventListener('click', hideBrowser);
+closeButton?.addEventListener('click', hideBrowser);
 
 searchField.addEventListener('input', () => {
     const query = searchField.value.trim();
@@ -237,8 +233,11 @@ searchField.addEventListener('input', () => {
         let shown = 0;
 
         for (const element of browseResults.children) {
-            const title = element.querySelector('[data-searchable]').textContent;
-            const display = regexp.test(title);
+            const searchableEl = element.querySelector('[data-searchable]');
+            const title = searchableEl.textContent;
+            const tags = searchableEl.dataset.tags || '';
+            const searchString = `${title} ${tags}`;
+            const display = regexp.test(searchString);
             element.style.setProperty('display', display ? null : 'none');
             if (display) { shown += 1; }
         }

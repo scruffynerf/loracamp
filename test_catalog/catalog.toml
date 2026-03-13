@@ -2,15 +2,30 @@ title = "LoraCamp Test Catalog"
 creator = "Scruffy Nerf"
 base_url = "https://loracamp.test"
 language = "en"
-synopsis = "A test catalog for LoraCamp features"
+synopsis = "A high-performance showcase for generative model delivery."
 about = """
 ## Welcome to the LoraCamp Test Catalog
 This catalog is used to verify all of LoraCamp's extraction, generation, and formatting features during development.
+
+LoraCamp is a lightweight, static site generator designed for model creators who need a simple, fast, and beautiful way to share their work with the world.
+
+### Features
+- **Auto-transcoding**: Any MP3/WAV samples are automatically converted to Opus for the web.
+- **Workflow Extraction**: ComfyUI metadata is automatically extracted and shared.
+- **Dynamic Theming**: Multiple color modes and high-performance CSS variables.
 """
 
 [[links]]
 label = "LoraCamp Github"
 url = "https://github.com/scruffynerf/loracamp"
+
+[[links]]
+label = "Documentation"
+url = "https://github.com/scruffynerf/loracamp/tree/main/docs"
+
+[[links]]
+label = "Model Archive"
+url = "https://huggingface.co/models"
 
 [theme]
 base = "dark"
