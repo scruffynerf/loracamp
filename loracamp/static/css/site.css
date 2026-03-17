@@ -20,7 +20,8 @@ a * { pointer-events: none; }
     margin-inline-end: .2rem;
 }
 .abstract .release_artists a,
-.release_info .release_artists a {
+.release_info .release_artists a,
+.model-creator a {
     text-decoration: underline;
     text-decoration-color: var(--bg-3);
     text-underline-offset: .3rem;
@@ -43,7 +44,8 @@ a * { pointer-events: none; }
 }
 
 .track:hover {
-    background-color: var(--bg-2);
+    background-color: transparent !important;
+    background: transparent !important;
     border-radius: var(--cover-border-radius);
 }
 
@@ -674,6 +676,12 @@ header svg {
     padding-top: 0.15rem;
     flex-shrink: 0;
 }
+.model-links {
+    align-items: flex-start; /* Left aligned as requested */
+}
+.model-links .pill-link {
+    width: fit-content;
+}
 .home_image {
     border-radius: var(--cover-border-radius);
     height: 40vw;
@@ -702,7 +710,7 @@ img {
 }
 .layout > * { max-width: 100vw; }
 main {
-    align-content: center;
+    align-content: flex-start; /* Corrected from center to start at the top */
     box-sizing: border-box;
 }
 path.loading_left {
@@ -807,7 +815,7 @@ path.loading_right {
 }
 .page_more { flex-grow: 1; }
 .page_split {
-    align-items: center;
+    align-items: flex-start; /* Changed from center to top-align "About" section */
     display: flex;
     justify-content: center;
 }
@@ -917,22 +925,24 @@ svg * { pointer-events: none; /* prevent click events on sub elements of an svg 
 }
 .js_enabled .track_playback {
     align-items: center;
-    background: var(--bg-1-overlay);
-    color: var(--bg-2);
-    justify-content: center;
+    background: transparent !important; /* Force no haze */
+    color: #fff;
+    display: grid;
+    place-items: center;
+    padding: 0;
 }
 .js_enabled .track .track_playback:focus-visible,
 .js_enabled .track .track_playback:hover {
-    background: var(--bg-2-overlay);
-    color: var(--fg-1);
+    background: transparent !important;
+    color: #fff;
 }
 .track.active .track_playback {
-    background: var(--bg-acc-overlay);
-    color: var(--fg-acc);
+    background: transparent !important; /* No active haze */
+    color: #fff;
 }
 .track.active .track_playback:focus-visible,
 .track.active .track_playback:hover {
-    background: var(--mg-acc-overlay);
+    background: transparent !important;
 }
 .track .track_playback img {
     border-radius: .3rem;
@@ -943,8 +953,21 @@ svg * { pointer-events: none; /* prevent click events on sub elements of an svg 
     top: 0;
     z-index: -1;
 }
-.js_enabled .track_playback img { opacity: .5; }
-.track .track_playback svg { display: block; }
+.js_enabled .track_playback img { opacity: 1; } /* Removed haze */
+.track .track_playback svg { 
+    display: block;
+    width: 2rem; /* Consistent size */
+    height: 2rem;
+    margin: 0;
+}
+.track-play-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
 .track_download_option { position: relative; }
 .docked_player .number,
 .docked_player .time,
@@ -1231,4 +1254,89 @@ html[dir="rtl"] .docked_player .track_info {
 }
 @media (prefers-reduced-motion: no-preference) {
     html { scroll-behavior: smooth; }
+}
+
+/* Creator Page Refinements */
+.compact-header {
+    padding-top: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--bg-3);
+    margin-bottom: 1.5rem;
+}
+
+.header-main-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.tiny-profile {
+    width: 60px !important;
+    height: 60px !important;
+    flex-shrink: 0;
+}
+
+.tiny-profile .creator-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid var(--bg-acc);
+}
+
+.creator-title {
+    margin: 0;
+    font-size: 1.8rem;
+}
+
+.creator-synopsis {
+    margin: 0.5rem 0 0;
+    color: var(--fg-2);
+    font-size: 1.05rem;
+    max-width: 48rem;
+}
+
+.scrolling-list {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    -webkit-overflow-scrolling: touch;
+}
+
+.small-card {
+    width: 120px !important;
+    flex: 0 0 auto;
+    text-decoration: none;
+}
+
+.small-preview {
+    width: 120px !important;
+    height: 120px !important;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.small-placeholder {
+    width: 120px;
+    height: 120px;
+    border-radius: 8px;
+}
+
+.small-info {
+    margin-top: 0.4rem;
+    text-align: center;
+}
+
+.small-info .card-title {
+    font-size: 0.8rem;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.creator-bio {
+    margin-bottom: 2rem;
 }

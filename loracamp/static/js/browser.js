@@ -264,3 +264,11 @@ searchField.addEventListener('input', () => {
         statusField.textContent = '';
     }
 });
+// Initial state and auto-open from query param
+if (window.location.search.includes('search=true')) {
+    // We need to wait a tiny bit for the DOM and scripts to be ready
+    window.addEventListener('load', () => {
+        const btn = browseButtonHeader || browseButtonFooter;
+        if (btn) showBrowser(btn);
+    });
+}

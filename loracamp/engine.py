@@ -261,9 +261,26 @@ class LoraCampEngine:
         model_site_dir = self.site_dir / model_slug
         model_site_dir.mkdir(parents=True, exist_ok=True)
 
-        # 1. Generate Metadata JSON
+        # 1. Filename Validation & Stem Calculation
+        generic_names = {"model", "lora", "weights", "base"}
+        if len(safetensor_files) > 1:
+            generic_stems = [Path(f).stem.lower() for f in safetensor_files]
+            for s in generic_stems:
+                if s in generic_names:
+                    import sys
+                    sys.exit(f"FATAL ERROR: Folder '{model_dir}' contains multiple models, one of which has a generic name '{s}.safetensors'. Please rename all models in this folder to be unique.")
+
         main_model_file = model_dir / safetensor_files[0]
-        metadata_filename = f"{main_model_file.stem}.metadata.json"
+        original_stem = main_model_file.stem
+        
+        # Determine model_stem (slug if generic, original if unique)
+        if original_stem.lower() in generic_names:
+            model_stem = model_slug.split('/')[-1]
+        else:
+            model_stem = original_stem
+
+        # 2. Generate Metadata JSON
+        metadata_filename = f"{model_stem}.metadata.json"
         meta_json = generate_metadata_json(model_manifest, main_model_file)
         save_metadata(meta_json, model_site_dir / metadata_filename)
 
@@ -316,23 +333,23 @@ class LoraCampEngine:
             
             if ext in video_extensions:
                 # Video preview - copy and extract poster
-                video_dest = model_site_dir / f"preview{ext}"
+                video_dest = model_site_dir / f"{model_stem}.preview{ext}"
                 shutil.copy2(f, video_dest)
                 video_url = video_dest.name
                 
                 # Extract poster as JPG (fallback/preview)
-                poster_dest = model_site_dir / "preview.jpg"
+                poster_dest = model_site_dir / f"{model_stem}.preview.jpg"
                 if extract_poster_image(f, poster_dest):
-                    preview_url = "preview.jpg"
+                    preview_url = poster_dest.name
                 
             elif ext in gif_extensions:
                 # Animated GIF - copy as-is, also extract a static poster for index card
-                gif_dest = model_site_dir / "preview.gif"
+                gif_dest = model_site_dir / f"{model_stem}.preview.gif"
                 shutil.copy2(f, gif_dest)
                 video_url = gif_dest.name  # Reuse video_url for animated display
                 
                 # Extract static frame for catalog card using Pillow
-                poster_dest = model_site_dir / "preview.jpg"
+                poster_dest = model_site_dir / f"{model_stem}.preview.jpg"
                 try:
                     from PIL import Image
                     with Image.open(f) as img:
@@ -341,13 +358,13 @@ class LoraCampEngine:
                             img = img.convert("RGB")
                         img.thumbnail((800, 800))
                         img.save(poster_dest, "JPEG", quality=85, optimize=True)
-                    preview_url = "preview.jpg"
+                    preview_url = poster_dest.name
                 except Exception as e:
                     print(f"  GIF poster extraction error: {e}")
                 
             elif ext in image_extensions:
                 # Image preview
-                preview_dest = model_site_dir / f"preview.{target_ext}"
+                preview_dest = model_site_dir / f"{model_stem}.preview.{target_ext}"
                 if optimize_image(f, preview_dest, format=target_ext):
                     preview_url = preview_dest.name
         else:
@@ -356,14 +373,14 @@ class LoraCampEngine:
             pkg_dir = Path(__file__).parent
             placeholder_src = pkg_dir / "static" / "placeholder.jpg"
             if placeholder_src.exists():
-                preview_dest = model_site_dir / "preview.jpg"
+                preview_dest = model_site_dir / f"{model_stem}.preview.jpg"
                 shutil.copy2(placeholder_src, preview_dest)
-                preview_url = "preview.jpg"
+                preview_url = preview_dest.name
             else:
                 print(f"  WARNING: Default placeholder missing from {placeholder_src}")
         
         # 3. Handle Asset Placement (Local vs CDN)
-        model_filename = main_model_file.name
+        model_filename = f"{model_stem}.safetensors"
         
         cdn_url = self.cdn_url  # local var so Pyre2 can narrow Optional[str]
         if cdn_url:
@@ -534,16 +551,16 @@ class LoraCampEngine:
         
         if is_image_lora and target_preview:
             # For image loras, download the ORIGINAL preview image as requested
-            preview_filename = target_preview.name
+            preview_filename = f"{model_stem}.preview{target_preview.suffix.lower()}"
             downloads.append({
                 "label": "Preview Art", 
                 "title": f"Download Preview Art ({preview_filename})", 
-                "url": preview_filename, 
+                "url": preview_url, 
                 "is_zip": False, 
                 "primary": False
             })
         elif preview_url:
-            downloads.append({"label": "Preview Art", "title": "Download Preview Art", "url": preview_url, "is_zip": False, "primary": False})
+            downloads.append({"label": "Preview Art", "title": f"Download Preview Art ({preview_url})", "url": preview_url, "is_zip": False, "primary": False})
             
         if video_url:
             downloads.append({"label": "Preview Video", "title": "Download Preview Video", "url": video_url, "is_zip": False, "primary": False})
@@ -829,7 +846,8 @@ class LoraCampEngine:
             og_image=og_image,
             og_url=f"{base_url}/{model_slug}/" if base_url else "",
             og_type="article",
-            search_data=search_data,
+            is_index=False,
+            search_data=None, # Don't embed on subpages
             is_image_lora=is_image_lora,
             build_id=self.build_id,
             debug_layout=self.debug_layout,
@@ -863,6 +881,7 @@ class LoraCampEngine:
             og_image=og_image,
             og_url=base_url + "/" if base_url else "",
             og_type="website",
+            is_index=True,
             search_data=search_data,
             build_id=self.build_id,
             debug_layout=self.debug_layout,
@@ -976,7 +995,8 @@ class LoraCampEngine:
                 og_image=og_image,
                 og_url=f"{base_url}/{creator_slug}/" if base_url else "",
                 og_type="profile",
-                search_data=search_data,
+                is_index=False,
+                search_data=None, # Don't embed on subpages
                 build_id=self.build_id,
                 debug_layout=self.debug_layout,
             )

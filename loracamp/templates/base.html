@@ -60,10 +60,17 @@
                 <button class="browse-btn theme-toggle" onclick="toggleTheme()" aria-label="Toggle Light/Dark Theme">
                     <span class="theme-icon">🌓</span>
                 </button>
+                {% if is_index %}
                 <button class="browse-btn" style="margin-left: 0.5rem;">
                     <span>Search</span>
                     <span class="search-icon">🔍</span>
                 </button>
+                {% else %}
+                <a href="{{ relative_root }}index.html?search=true" class="browse-btn" style="margin-left: 0.5rem; text-decoration: none; display: inline-flex; align-items: center;">
+                    <span>Search</span>
+                    <span class="search-icon">🔍</span>
+                </a>
+                {% endif %}
             </div>
         </div>
     </header>
@@ -151,6 +158,7 @@
     </div>
     <div aria-label="" class="docked_player_status" role="status"></div>
 
+    {% if is_index %}
     <div id="browser" data-root-prefix="{{ relative_root }}">
         <div class="browser-content">
             <div class="browser-header">
@@ -163,7 +171,9 @@
             <div id="results"></div>
         </div>
     </div>
+    {% endif %}
 
+    {% if is_index %}
     <script>
         // Search Data injected by Engine
         const CREATORS = {{ (search_data.creators if search_data else []) | tojson | safe }};
@@ -177,7 +187,10 @@
             showingXxxResultsForXxx: (count, query) => `Showing ${count} results for "${query}"`,
             xxxAndOthers: (xxx, othersLink) => `${xxx} and others`
         };
+    </script>
+    {% endif %}
 
+    <script>
         // Translations expected by player.js
         const PLAYER_JS_T = {
             listen: "Listen",
@@ -194,7 +207,9 @@
         };
     </script>
     <script src="{{ relative_root }}static/js/player.js"></script>
+    {% if is_index %}
     <script src="{{ relative_root }}static/js/browser.js"></script>
+    {% endif %}
     <script>
         function toggleTheme() {
             const currentTheme = document.documentElement.getAttribute('data-theme');
