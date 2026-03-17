@@ -7,6 +7,7 @@ def main():
     parser.add_argument("catalog", type=str, help="Path to your model catalog directory")
     parser.add_argument("--build", action="store_true", help="Build the site")
     parser.add_argument("--preview", action="store_true", help="Start a local web server to preview the site")
+    parser.add_argument("--rebuild", action="store_true", help="Force a fresh build by deleting existing output directories")
     parser.add_argument("--port", type=int, default=8000, help="Port to use for the local web server")
     parser.add_argument("--cdn-url", type=str, help="Optional CDN URL for large files")
     parser.add_argument("--output", type=str, default=".", help="Output directory (default: current)")
@@ -18,6 +19,7 @@ def main():
         "--exclude", action="append", dest="exclude_patterns", metavar="PATTERN",
         help="Skip paths containing this pattern (can be used multiple times)"
     )
+    parser.add_argument("--debug-layout", action="store_true", help="Include debug layout outlines and labels")
 
     args = parser.parse_args()
 
@@ -26,12 +28,21 @@ def main():
     
     if args.build or args.preview:
         if args.build:
+            if args.rebuild:
+                import shutil
+                for sub in ["yoursite", "yourcdn"]:
+                    dir_to_clean = output_path / sub
+                    if dir_to_clean.exists():
+                        print(f"Cleaning existing directory: {dir_to_clean}")
+                        shutil.rmtree(dir_to_clean)
+
             engine = LoraCampEngine(
                 catalog_dir=catalog_path,
                 output_dir=output_path,
                 cdn_url=args.cdn_url,
                 include_patterns=args.include_patterns,
                 exclude_patterns=args.exclude_patterns,
+                debug_layout=args.debug_layout,
             )
             engine.build()
             

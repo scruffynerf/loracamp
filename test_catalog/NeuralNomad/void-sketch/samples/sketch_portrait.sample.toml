@@ -1,0 +1,7 @@
+name = "Void Sketch – Portrait"
+tags = ["delta", "abstract", "portrait"]
+prompt = "Abstract portrait with stark contrast, void_sketch, ink lines on white"
+seed = 111
+steps = 20
+cfg = 9.0
+sampler = "DPM++ SDE Karras"

@@ -1,0 +1,7 @@
+name = "Terracotta – Ancient Figurine"
+tags = ["beta", "ancient", "artifact"]
+prompt = "Ancient clay figurine half-dissolved into raw clay, terracotta_dreams, museum lighting"
+seed = 452
+steps = 20
+cfg = 6.0
+sampler = "Euler a"

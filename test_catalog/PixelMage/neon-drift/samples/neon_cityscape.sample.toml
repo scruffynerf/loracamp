@@ -1,0 +1,6 @@
+name = "Drift – Neon Cityscape Atmosphere"
+tags = ["beta", "neon", "atmosphere"]
+prompt = "Aerial view of neon-lit megacity, neon_drift_style, fog"
+seed = 512
+steps = 28
+cfg = 7.5

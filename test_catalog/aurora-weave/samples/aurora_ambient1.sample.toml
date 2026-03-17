@@ -1,0 +1,7 @@
+name = "Aurora – Mountain Trail"
+tags = ["gamma", "landscape", "night"]
+prompt = "Hiker on a snowy mountain under northern lights, aurora_weave, green and violet sky"
+seed = 64
+steps = 30
+cfg = 7.5
+sampler = "DPM++ 2M Karras"

@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
 {% block content %}
-<header>
-    <h1>{{ catalog.title if catalog else "LoraCamp Collection" }}</h1>
+<header class="catalog-header">
+    <h1 class="catalog-title">{{ catalog.title if catalog else "LoraCamp Collection" }}</h1>
     {% if catalog and catalog.synopsis %}
-    <p class="synopsis">{{ catalog.synopsis }}</p>
+    <p class="synopsis catalog-synopsis">{{ catalog.synopsis }}</p>
     {% endif %}
 
     {% if catalog and catalog.links %}
@@ -19,7 +19,7 @@
 
     {% if catalog and catalog.about %}
     <section class="catalog-about">
-        <div class="text">{{ catalog.about | markdown }}</div>
+        <div class="text catalog-about-text">{{ catalog.about | markdown }}</div>
     </section>
     {% endif %}
 </header>
@@ -37,20 +37,20 @@
 
         {% for creator_name in creators_list %}
         <section class="creator-section">
-            <h2 class="creator-heading">
+            <h2 class="creator-section-heading">
                 <a href="{{ creator_name | lower | replace(' ', '-') }}/index.html">{{ creator_name }}</a>
             </h2>
-            <div class="model_list">
+            <div class="model_list model-grid">
                 {% for model_item in models %}
                 {% if (model_item.manifest.creator or "Unknown Creator") == creator_name %}
-                <div class="release">
-                    <a href="{{ model_item.slug }}/index.html">
+                <div class="release release-card">
+                    <a href="{{ model_item.slug }}/index.html" class="card-link">
                         {% if model_item.preview_url %}
-                        <img src="{{ model_item.slug }}/{{ model_item.preview_url }}" alt="{{ model_item.manifest.title }}">
+                        <img src="{{ model_item.slug }}/{{ model_item.preview_url }}" alt="{{ model_item.manifest.title }}" class="card-image">
                         {% else %}
-                        <div class="placeholder"></div>
+                        <div class="placeholder card-placeholder"></div>
                         {% endif %}
-                        <h3>{{ model_item.manifest.title or model_item.dir.name }}</h3>
+                        <h3 class="card-title">{{ model_item.manifest.title or model_item.dir.name }}</h3>
                     </a>
                 </div>
                 {% endif %}
@@ -60,19 +60,19 @@
         {% endfor %}
     {% else %}
         {# Standard flat catalog view #}
-        <div class="model_list">
+        <div class="model_list model-grid">
             {% for model_item in models %}
-            <div class="release">
-                <a href="{{ model_item.slug }}/index.html">
+            <div class="release release-card">
+                <a href="{{ model_item.slug }}/index.html" class="card-link">
                     {% if model_item.preview_url %}
-                    <img src="{{ model_item.slug }}/{{ model_item.preview_url }}" alt="{{ model_item.manifest.title }}">
+                    <img src="{{ model_item.slug }}/{{ model_item.preview_url }}" alt="{{ model_item.manifest.title }}" class="card-image">
                     {% else %}
-                    <div class="placeholder"></div>
+                    <div class="placeholder card-placeholder"></div>
                     {% endif %}
-                    <h2>{{ model_item.manifest.title or model_item.dir.name }}</h2>
+                    <h2 class="card-title">{{ model_item.manifest.title or model_item.dir.name }}</h2>
                 </a>
                 {% if model_item.manifest.creator %}
-                <p class="creator">by <a href="{{ model_item.manifest.creator | lower | replace(' ', '-') }}/index.html">{{ model_item.manifest.creator }}</a></p>
+                <p class="creator card-creator">by <a href="{{ model_item.manifest.creator | lower | replace(' ', '-') }}/index.html">{{ model_item.manifest.creator }}</a></p>
                 {% endif %}
             </div>
             {% endfor %}

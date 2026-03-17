@@ -1,0 +1,7 @@
+name = "Terracotta – Detail Closeup"
+tags = ["delta", "texture", "closeup"]
+prompt = "Extreme closeup of fired clay texture, terracotta_dreams, macro photography"
+seed = 88
+steps = 22
+cfg = 7.5
+sampler = "DPM++ SDE"

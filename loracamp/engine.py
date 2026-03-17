@@ -1,4 +1,5 @@
 import os
+import time
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 from jinja2 import Environment, FileSystemLoader
@@ -18,15 +19,18 @@ class LoraCampEngine:
         cdn_url: Optional[str] = None,
         include_patterns: Optional[List[str]] = None,
         exclude_patterns: Optional[List[str]] = None,
+        debug_layout: bool = False,
     ):
         self.catalog_dir = catalog_dir
         self.output_dir = output_dir
         self.cdn_url = cdn_url
         self.include_patterns = include_patterns or []
         self.exclude_patterns = exclude_patterns or []
+        self.debug_layout = debug_layout
         self.creator_aliases: Dict[str, str] = {}
         self.theme_css: str = ""
         self.has_custom_css: bool = False
+        self.build_id = str(int(time.time()))
         
         # Set up explicit output folders for clarity
         self.site_dir = output_dir / "yoursite"
@@ -87,6 +91,12 @@ class LoraCampEngine:
         
         # 2. Copy static assets
         copy_static_assets(self.site_dir)
+        
+        # 2a. Conditional debug cleanup
+        if not self.debug_layout:
+            debug_css_dest = self.site_dir / "static" / "css" / "debug.css"
+            if debug_css_dest.exists():
+                debug_css_dest.unlink()
         
         # 2b. Check for custom.css in catalog_dir
         custom_css_path = self.catalog_dir / "custom.css"
@@ -186,6 +196,9 @@ class LoraCampEngine:
 
         # 7. Generate Search Data
         search_data = self._prepare_search_data(catalog, models, creators)
+        import json
+        with open(self.site_dir / "search_data.json", "w", encoding="utf-8") as f:
+            json.dump(search_data, f, indent=2)
 
         # 8. Render Index
         self.render_index(catalog, models, search_data)
@@ -369,28 +382,127 @@ class LoraCampEngine:
             shutil.copy2(main_model_file, dest_path)
             model_url = model_filename
 
-        # 3. Discover Samples (MP3, WAV, FLAC)
+        # 3. Discover Samples
         samples = []
         audio_extensions = {".mp3", ".wav", ".flac", ".opus"}
+        image_extensions = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
         model_audio_files = []
         
-        # Check main model dir
-        for f in model_dir.iterdir():
-            if f.is_file() and f.suffix.lower() in audio_extensions:
-                sample_data = self.process_sample(f, model_slug, model_manifest)
-                if sample_data:
-                    samples.append(sample_data)
-                    model_audio_files.append(f)
-                    
-        # Check samples/ nested folder
-        samples_dir = model_dir / "samples"
-        if samples_dir.exists() and samples_dir.is_dir():
-            for f in samples_dir.iterdir():
+        # Check for any audio files recursively (or just in main/samples) to determine if it's an image lora
+        has_audio = False
+        for root, _, files in os.walk(model_dir):
+            if any(Path(f).suffix.lower() in audio_extensions for f in files):
+                has_audio = True
+                break
+        
+        is_image_lora = not has_audio
+        
+        if not is_image_lora:
+            # Traditional Audio Lora processing
+            # Check main model dir
+            for f in model_dir.iterdir():
                 if f.is_file() and f.suffix.lower() in audio_extensions:
                     sample_data = self.process_sample(f, model_slug, model_manifest)
                     if sample_data:
                         samples.append(sample_data)
                         model_audio_files.append(f)
+                        
+            # Check samples/ nested folder
+            samples_dir = model_dir / "samples"
+            if samples_dir.exists() and samples_dir.is_dir():
+                for f in samples_dir.iterdir():
+                    if f.is_file() and f.suffix.lower() in audio_extensions:
+                        sample_data = self.process_sample(f, model_slug, model_manifest)
+                        if sample_data:
+                            samples.append(sample_data)
+                            model_audio_files.append(f)
+        else:
+            # Image Lora processing - discover image files as samples recursively
+            print(f"  Detected Image Lora (no audio found)")
+            from .media import extract_image_metadata
+            
+            # Start with the main preview image if it exists
+            discovered_images = []
+            if target_preview:
+                discovered_images.append(target_preview)
+
+            # Discover all other images recursively
+            for root, _, files in os.walk(model_dir):
+                root_path = Path(root)
+                # Skip samples/ if we already handled it? No, os.walk handles everything.
+                # However, we want a consistent sorting.
+                for f_name in sorted(files):
+                    f = root_path / f_name
+                    if f.suffix.lower() in image_extensions:
+                        # Skip if it's already the target_preview or looks like a cover
+                        if target_preview and f.resolve() == target_preview.resolve():
+                            continue
+                        if f.stem.lower() in ("cover", "preview"):
+                            continue
+                        if f_name.startswith("."):
+                            continue
+                        
+                        discovered_images.append(f)
+            
+            # Process and copy images
+            for img_path in discovered_images:
+                # Extract metadata
+                img_metadata = extract_image_metadata(img_path)
+                
+                # For images in subdirectories, we'll flatten them but avoid name collisions
+                # by using a hash or relative path string if necessary.
+                # For now, let's keep it simple and just use the filename, 
+                # but maybe with a prefix if it's in a subfolder.
+                try:
+                    rel_to_model = img_path.relative_to(model_dir)
+                    parts = list(rel_to_model.parts)
+                    if parts[0] == "samples":
+                        parts = parts[1:]
+                    
+                    if len(parts) > 1:
+                        # e.g. subdir/img.png -> subdir_img.png
+                        safe_name = "_".join(parts)
+                    else:
+                        safe_name = parts[0]
+                except (ValueError, IndexError):
+                    safe_name = img_path.name
+
+                dest = model_site_dir / safe_name
+                import shutil
+                shutil.copy2(img_path, dest)
+                
+                # Mock a SampleManifest for the template's logic
+                from .manifests import SampleManifest
+                s_manifest = SampleManifest()
+                
+                # Populate if metadata found
+                prompt_data = img_metadata.get("prompt", {})
+                if isinstance(prompt_data, dict):
+                    # Similar logic to process_sample's extraction
+                    for node_id, node in prompt_data.items():
+                        if isinstance(node, dict) and "class_type" in node:
+                            inputs = node.get("inputs", {})
+                            if not s_manifest.prompt and "text" in inputs and isinstance(inputs["text"], str):
+                                s_manifest.prompt = inputs["text"]
+                            if not s_manifest.seed and "seed" in inputs and isinstance(inputs["seed"], (int, float)):
+                                s_manifest.seed = int(inputs["seed"])
+                            if not s_manifest.steps and "steps" in inputs and isinstance(inputs["steps"], (int, float)):
+                                s_manifest.steps = int(inputs["steps"])
+                            if not s_manifest.cfg and "cfg" in inputs and isinstance(inputs["cfg"], (int, float)):
+                                s_manifest.cfg = float(inputs["cfg"])
+                            if not s_manifest.sampler and "sampler_name" in inputs:
+                                s_manifest.sampler = inputs["sampler_name"]
+                            if not s_manifest.scheduler and "scheduler" in inputs:
+                                s_manifest.scheduler = inputs["scheduler"]
+                
+                from dataclasses import asdict
+                samples.append({
+                    "name": img_path.stem,
+                    "url": safe_name,
+                    "is_image": True,
+                    "manifest": asdict(s_manifest),
+                    "original_path": img_path
+                })
 
         # 4. Discover Extras (Automatic + Manifest)
         extras = []
@@ -416,30 +528,45 @@ class LoraCampEngine:
 
         # 5. Prepare Download Links (Replaced ZIP bundling)
         downloads: List[Dict[str, Any]] = [
-            {"label": "Download Model", "url": model_url, "is_zip": False, "primary": True},
-            {"label": "Download Metadata", "url": metadata_filename, "is_zip": False, "primary": False}
+            {"label": "Model", "title": "Download Model", "url": model_url, "is_zip": False, "primary": True},
+            {"label": "Metadata", "title": "Download Metadata", "url": metadata_filename, "is_zip": False, "primary": False}
         ]
         
-        if preview_url:
-            downloads.append({"label": "Download Preview Art", "url": preview_url, "is_zip": False, "primary": False})
+        if is_image_lora and target_preview:
+            # For image loras, download the ORIGINAL preview image as requested
+            preview_filename = target_preview.name
+            downloads.append({
+                "label": "Preview Art", 
+                "title": f"Download Preview Art ({preview_filename})", 
+                "url": preview_filename, 
+                "is_zip": False, 
+                "primary": False
+            })
+        elif preview_url:
+            downloads.append({"label": "Preview Art", "title": "Download Preview Art", "url": preview_url, "is_zip": False, "primary": False})
+            
         if video_url:
-            downloads.append({"label": "Download Preview Video", "url": video_url, "is_zip": False, "primary": False})
+            downloads.append({"label": "Preview Video", "title": "Download Preview Video", "url": video_url, "is_zip": False, "primary": False})
 
         for extra_f in extras:
             # Copy extras to output for individual download
             extra_dest = model_site_dir / extra_f.name
             import shutil
             shutil.copy2(extra_f, extra_dest)
-            downloads.append({"label": f"Download Extra ({extra_f.name})", "url": extra_f.name, "is_zip": False, "primary": False})
+            downloads.append({
+                "label": extra_f.name, 
+                "title": f"Download Extra: {extra_f.name}", 
+                "url": extra_f.name, 
+                "is_zip": False, 
+                "primary": False
+            })
 
         # 6. Prepare Search Data
         # (This is now handled at the end of run() and passed back during re-rendering if needed, 
         # but for individual model pages we might need it passed in)
         
         # 7. Render Detail Page
-        # Note: render_model_page will be called again in run() if we want search_data everywhere,
-        # but actually we can just update render_model_page signature.
-        self.render_model_page(model_manifest, samples, model_url, preview_url, video_url, downloads, model_site_dir, catalog=catalog)
+        self.render_model_page(model_manifest, samples, model_url, preview_url, video_url, downloads, model_site_dir, catalog=catalog, is_image_lora=is_image_lora)
 
         # Build list of creators for the index
         display_creator = model_manifest.creator
@@ -456,7 +583,8 @@ class LoraCampEngine:
             "display_creator": display_creator,
             "dir": model_dir,
             "slug": model_slug,
-            "samples": samples
+            "samples": samples,
+            "is_image_lora": is_image_lora
         }
 
     def process_sample(self, audio_file: Path, model_slug: str, model_manifest: ModelManifest):
@@ -589,8 +717,10 @@ class LoraCampEngine:
         # 1. Explicit cover field in sample manifest
         if sample_manifest and sample_manifest.cover:
             cover_file = sample_dir / sample_manifest.cover
-            if cover_file.exists() and cover_file.suffix.lower() in image_extensions:
+            if cover_file.exists():
                 cover_url = self._copy_sample_cover(cover_file, model_slug, audio_file.stem)
+            else:
+                cover_url = self._copy_sample_cover(None, model_slug, audio_file.stem, label=f"Sample cover '{sample_manifest.cover}'")
         
         # 2. Same-stem image (e.g. demo_1.jpg for demo_1.mp3)
         if not cover_url:
@@ -607,33 +737,59 @@ class LoraCampEngine:
                     cover_url = self._copy_sample_cover(f, model_slug, audio_file.stem)
                     break
 
+        from dataclasses import asdict
         return {
             "name": sample_title,
             "url": sample_url,
             "duration": duration,
-            "manifest": sample_manifest,
+            "manifest": asdict(sample_manifest) if sample_manifest else None,
             "workflow_url": workflow_url,
             "cover_url": cover_url,
             "external_page": sample_manifest.external_page if sample_manifest else None,
         }
 
-    def _copy_sample_cover(self, cover_file: Path, model_slug: str, sample_stem: str) -> Optional[str]:
-        """Copy a sample cover image to the output and return its URL relative to the model page."""
+    def _verify_asset(self, src: Optional[Path], dest: Path, label: str = "Asset") -> bool:
+        """
+        Verify that an asset exists, copy it to dest, and issue warnings if missing.
+        Returns True if successful, False if missing.
+        If missing and it's an image-like destination, copies a default placeholder.
+        """
         import shutil
-        dest_name = f"{sample_stem}_cover{cover_file.suffix.lower()}"
+        if src and src.exists():
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dest)
+            return True
+        else:
+            if src:
+                print(f"  [WARNING] Missing {label}: {src}")
+            else:
+                print(f"  [WARNING] Missing {label} (not specified or invalid)")
+                
+            # Fallback for images
+            if dest.suffix.lower() in {".jpg", ".jpeg", ".png", ".webp", ".gif"}:
+                placeholder_src = Path(__file__).parent / "static" / "img" / "missing.png"
+                if placeholder_src.exists():
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(placeholder_src, dest)
+                    return True
+            return False
+
+    def _copy_sample_cover(self, cover_file: Optional[Path], model_slug: str, sample_stem: str, label: str = "Sample cover") -> Optional[str]:
+        """Copy a sample cover image to the output and return its URL relative to the model page."""
+        dest_name = f"{sample_stem}_cover{cover_file.suffix.lower() if cover_file else '.png'}"
         if self.cdn_url:
             dest = self.asset_dir / model_slug / "samples" / dest_name
         else:
             dest = self.site_dir / model_slug / "samples" / dest_name
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(cover_file, dest)
+        
+        self._verify_asset(cover_file, dest, label=label)
         
         cdn_url = self.cdn_url
         if cdn_url:
             return f"{cdn_url.rstrip('/')}/{model_slug}/samples/{dest_name}"
         return f"samples/{dest_name}"
 
-    def render_model_page(self, model_manifest: ModelManifest, samples: List[Dict], model_url: str, preview_url: Optional[str], video_url: Optional[str], downloads: List[Dict], output_dir: Path, catalog: Optional[CatalogManifest] = None, search_data: Optional[Dict] = None):
+    def render_model_page(self, model_manifest: ModelManifest, samples: List[Dict], model_url: str, preview_url: Optional[str], video_url: Optional[str], downloads: List[Dict], output_dir: Path, catalog: Optional[CatalogManifest] = None, search_data: Optional[Dict] = None, is_image_lora: bool = False):
         try:
             template = self.env.get_template("model.html")
         except Exception:
@@ -674,6 +830,9 @@ class LoraCampEngine:
             og_url=f"{base_url}/{model_slug}/" if base_url else "",
             og_type="article",
             search_data=search_data,
+            is_image_lora=is_image_lora,
+            build_id=self.build_id,
+            debug_layout=self.debug_layout,
         )
         with open(output_dir / "index.html", "w") as f:
             f.write(content)
@@ -705,6 +864,8 @@ class LoraCampEngine:
             og_url=base_url + "/" if base_url else "",
             og_type="website",
             search_data=search_data,
+            build_id=self.build_id,
+            debug_layout=self.debug_layout,
         )
         with open(self.site_dir / "index.html", "w") as f:
             f.write(content)
@@ -749,11 +910,13 @@ class LoraCampEngine:
         # Handle creator image if specified
         creator_image_url = None
         if manifest.image:
-            import shutil
+            # Check for a specific 'profile.png' as hinted by user request
             src = creator_data["dir"] / manifest.image
-            if src.exists():
-                dest = creator_site_dir / manifest.image
-                shutil.copy2(src, dest)
+            dest = creator_site_dir / manifest.image
+            if self._verify_asset(src, dest, label=f"Creator profile image '{manifest.image}'"):
+                creator_image_url = manifest.image
+            else:
+                # If verify_asset used fallback, the file exists now at dest
                 creator_image_url = manifest.image
 
         base_url = getattr(catalog, "base_url", None) or ""
@@ -814,6 +977,8 @@ class LoraCampEngine:
                 og_url=f"{base_url}/{creator_slug}/" if base_url else "",
                 og_type="profile",
                 search_data=search_data,
+                build_id=self.build_id,
+                debug_layout=self.debug_layout,
             )
         with open(creator_site_dir / "index.html", "w") as f:
             f.write(content)
@@ -830,6 +995,7 @@ class LoraCampEngine:
                 "title": m_manifest.title or m_slug,
                 "url": f"{m_slug}/",
                 "cover": m.get("preview_url") or "",
+                "creator": m.get("display_creator") or "",
                 "tags": getattr(m_manifest, "tags", []) or [],
                 "tracks": []
             }
@@ -847,7 +1013,13 @@ class LoraCampEngine:
             if "samples" in m:
                 for i, s in enumerate(m["samples"]):
                     s_manifest = s.get("manifest")
-                    s_tags = getattr(s_manifest, "tags", []) if s_manifest else []
+                    s_tags = []
+                    if s_manifest:
+                        if isinstance(s_manifest, dict):
+                            s_tags = s_manifest.get("tags", [])
+                        else:
+                            s_tags = getattr(s_manifest, "tags", [])
+                    
                     search_model["tracks"].append({
                         "title": s["name"],
                         "url": f"{m_slug}/",

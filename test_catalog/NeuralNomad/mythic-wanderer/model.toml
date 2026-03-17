@@ -1,0 +1,22 @@
+title = "Mythic Wanderer"
+creator = "NeuralNomad"
+synopsis = "Character concept LoRA for wandering heroes in fantasy settings."
+about = """
+Mythic Wanderer captures the weathered, battle-worn aesthetic of classic lone-hero archetypes.
+Trained across dozens of fantasy illustrations and concept sheets.
+"""
+trigger_word = "mythic_wanderer"
+permalink = "mythic-wanderer"
+tags = ["alpha", "gamma", "character", "fantasy"]
+release_date = "2025-02-20"
+base_model = "SD 1.5"
+version = "v2.0"
+copy_link = true
+sample_prompts = [
+    "A lone wanderer in a desert, mythic_wanderer, worn cloak, dramatic sky",
+    "Hero resting at a campfire in the forest, mythic_wanderer, moonlight"
+]
+
+[[links]]
+label = "HuggingFace"
+url = "https://huggingface.co/neuralnomad-test/mythic-wanderer"

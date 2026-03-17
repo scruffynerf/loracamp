@@ -1,0 +1,21 @@
+title = "Void Sketch"
+creator = "NeuralNomad"
+synopsis = "Experimental sketch-and-void art style, high-contrast and abstract."
+about = """
+Void Sketch produces stark black-and-white illustrations with blown-out highlights and deep shadow wells.
+An experimental style LoRA with unpredictable results — in a good way.
+"""
+trigger_word = "void_sketch"
+permalink = "void-sketch"
+tags = ["delta", "experimental", "sketch", "abstract"]
+release_date = "2025-07-01"
+base_model = "SDXL 1.0"
+version = "v0.9-beta"
+sample_prompts = [
+    "Abstract portrait, void_sketch, stark contrast, ink lines",
+    "Shadowy figure in empty white space, void_sketch"
+]
+
+[[links]]
+label = "Discussion Thread"
+url = "https://huggingface.co/neuralnomad-test/void-sketch/discussions"

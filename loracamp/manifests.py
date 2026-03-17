@@ -110,8 +110,10 @@ def parse_catalog(path: Path) -> CatalogManifest:
 
 def parse_creator(path: Path) -> CreatorManifest:
     data = load_toml(path)
-    # the [[links]] table in TOML naturally becomes a list of dicts
-    # which matches BaseModel.links. We don't need to pop it.
+    # The [links] table in TOML naturally becomes a dict.
+    # LoraCamp uses links_dict for this.
+    if "links" in data and isinstance(data["links"], dict):
+        data["links_dict"] = data.pop("links")
     return CreatorManifest(**data)
 
 def parse_model(path: Path) -> ModelManifest:

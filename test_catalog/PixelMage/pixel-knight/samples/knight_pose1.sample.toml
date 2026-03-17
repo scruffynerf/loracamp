@@ -1,0 +1,7 @@
+name = "Pixel Knight – Dungeon Pose"
+tags = ["alpha", "armor", "dungeon"]
+prompt = "A warrior in pixel art armor, pixel_knight_v1, 8-bit dungeon scene"
+seed = 42
+steps = 28
+cfg = 7.5
+sampler = "DPM++ 2M Karras"

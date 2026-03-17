@@ -1,0 +1,7 @@
+name = "Pixel Knight – Battle Ready"
+tags = ["alpha", "armor", "battle"]
+prompt = "Fantasy knight standing with glowing sword, pixel_knight_v1, 8-bit aesthetic"
+seed = 777
+steps = 30
+cfg = 7.0
+sampler = "Euler a"

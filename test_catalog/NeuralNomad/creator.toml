@@ -1,0 +1,11 @@
+name = "NeuralNomad"
+synopsis = "Experimenter and collector of niche character concepts."
+about = """
+NeuralNomad explores the outer edges of model fine-tuning, producing unique and experimental LoRAs.
+Expect the unexpected.
+"""
+image_description = "NeuralNomad wanderer icon"
+
+[[links]]
+label = "HuggingFace"
+url = "https://huggingface.co/neuralnomad-test"

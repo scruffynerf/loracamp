@@ -1,9 +1,9 @@
 const browser = document.querySelector('#browser');
-const browseButtonFooter = document.querySelector('footer button.browse');
-const browseButtonHeader = document.querySelector('header button.browse');
+const browseButtonFooter = document.querySelector('footer button.browse-btn:not(.theme-toggle)');
+const browseButtonHeader = document.querySelector('header button.browse-btn:not(.theme-toggle)');
 
 const browseResults = browser.querySelector('#results');
-const closeButton = browser.querySelector('button');
+const closeButton = browser.querySelector('.close-browser');
 const searchField = browser.querySelector('input');
 const statusField = browser.querySelector('[role="status"]');
 
@@ -173,12 +173,14 @@ for (const creator of CREATORS) {
 }
 
 function hideBrowser() {
-    const browseButton = browseButtonFooter.ariaExpanded === 'true'
+    const browseButton = (browseButtonFooter && browseButtonFooter.getAttribute('aria-expanded') === 'true')
         ? browseButtonFooter
         : browseButtonHeader;
 
     browser.classList.remove('active');
-    browseButton.setAttribute('aria-expanded', 'false');
+    if (browseButton) {
+        browseButton.setAttribute('aria-expanded', 'false');
+    }
     searchField.value = '';
     statusField.removeAttribute('aria-label');
     statusField.textContent = '';
@@ -186,7 +188,9 @@ function hideBrowser() {
         const display = result.dataset.track === undefined;
         result.style.setProperty('display', display ? null : 'none');
     }
-    browseButton.focus();
+    if (browseButton) {
+        browseButton.focus();
+    }
 }
 
 function showBrowser(browseButton) {
@@ -236,7 +240,8 @@ searchField.addEventListener('input', () => {
             const searchableEl = element.querySelector('[data-searchable]');
             const title = searchableEl.textContent;
             const tags = searchableEl.dataset.tags || '';
-            const searchString = `${title} ${tags}`;
+            const creator = element.querySelector('.artists')?.textContent || '';
+            const searchString = `${title} ${tags} ${creator}`.toLowerCase();
             const display = regexp.test(searchString);
             element.style.setProperty('display', display ? null : 'none');
             if (display) { shown += 1; }

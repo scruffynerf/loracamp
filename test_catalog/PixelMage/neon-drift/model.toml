@@ -1,0 +1,22 @@
+title = "Neon Drift"
+creator = "PixelMage"
+synopsis = "Cyberpunk-city diffusion style with animated neon trails."
+about = """
+Neon Drift was trained on a mix of cyberpunk concept art and photographic long-exposure shots.
+Works best with night scenes and rain-slicked streets.
+"""
+trigger_word = "neon_drift_style"
+permalink = "neon-drift"
+tags = ["beta", "style", "cyberpunk", "neon"]
+release_date = "2025-05-15"
+base_model = "SDXL 1.0"
+version = "v1.2"
+copy_link = true
+sample_prompts = [
+    "A lone figure on a neon-lit street, neon_drift_style, rain, bokeh",
+    "Futuristic city intersection at night, neon_drift_style, cyberpunk atmosphere"
+]
+
+[[links]]
+label = "HuggingFace"
+url = "https://huggingface.co/pixelmage-test/neon-drift"

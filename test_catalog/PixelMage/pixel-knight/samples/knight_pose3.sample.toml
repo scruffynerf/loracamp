@@ -1,0 +1,7 @@
+name = "Pixel Knight – Victory Stance"
+tags = ["alpha", "beta", "armor"]
+prompt = "Triumphant knight on a hilltop, pixel_knight_v1, sunrise, pixel art"
+seed = 1024
+steps = 25
+cfg = 6.5
+sampler = "DPM++ SDE"

@@ -1,0 +1,7 @@
+name = "Wanderer by the Fire"
+tags = ["gamma", "forest", "campfire"]
+prompt = "Hero resting at campfire in a misty forest, mythic_wanderer, moonlight"
+seed = 900
+steps = 25
+cfg = 6.5
+sampler = "Euler a"

@@ -54,8 +54,8 @@ def get_audio_duration(file_path: Path) -> Optional[float]:
         return None
 
 def optimize_image(input_path: Path, output_path: Path, max_size: int = 800, format: str = "JPEG"):
-    """Resize and optimize an image using Pillow."""
-    from PIL import Image
+    """Resize and optimize an image using Pillow, with square padding."""
+    from PIL import Image, ImageOps
     # Normalize format for Pillow
     save_format = format.upper()
     if save_format == "JPG":
@@ -63,11 +63,29 @@ def optimize_image(input_path: Path, output_path: Path, max_size: int = 800, for
         
     try:
         with Image.open(input_path) as img:
-            # Convert to RGB if saving as JPEG
+            # 1. Convert to RGB/RGBA if necessary
             if save_format == "JPEG" and img.mode in ("RGBA", "P"):
                 img = img.convert("RGB")
             
-            img.thumbnail((max_size, max_size))
+            # 2. Resize with aspect ratio preserved
+            img.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
+            
+            # 3. Add padding to make it square
+            width, height = img.size
+            if width != height:
+                # Create a background color matching the image mode
+                bg_color = (0, 0, 0) if img.mode == "RGB" else (0, 0, 0, 0)
+                
+                # Check if we should use white or black or something else? 
+                # Let's stick with a neutral background or maybe detect common color?
+                # For now, let's use a transparent background if RGBA, or black if RGB
+                # Actually, many sites use white. Let's use black as a safe default for dark themes.
+                
+                new_size = max(width, height)
+                new_img = Image.new(img.mode, (new_size, new_size), bg_color)
+                new_img.paste(img, ((new_size - width) // 2, (new_size - height) // 2))
+                img = new_img
+
             img.save(output_path, save_format, quality=85, optimize=True)
             return True
     except Exception as e:
@@ -184,4 +202,34 @@ def extract_mp3_metadata(file_path: Path) -> dict:
     except Exception as e:
         print(f"Error extracting MP3 metadata from {file_path.name}: {e}")
 
+    return metadata
+def extract_image_metadata(file_path: Path) -> dict:
+    """
+    Extracts metadata from an image file (PNG, JPEG, WebP).
+    Currently supports ComfyUI-style 'prompt' and 'workflow' metadata.
+    """
+    from PIL import Image
+    import json
+    
+    metadata = {}
+    try:
+        with Image.open(file_path) as img:
+            info = img.info
+            if not info:
+                return {}
+            
+            # ComfyUI usually stores 'prompt' and 'workflow' as strings in PNG/WebP info
+            for key in ("prompt", "workflow"):
+                if key in info:
+                    content = info[key]
+                    if isinstance(content, str):
+                        try:
+                            metadata[key] = json.loads(content)
+                        except json.JSONDecodeError:
+                            metadata[key] = content
+                    else:
+                        metadata[key] = content
+    except Exception as e:
+        print(f"Error extracting image metadata from {file_path.name}: {e}")
+        
     return metadata

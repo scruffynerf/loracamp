@@ -1,0 +1,6 @@
+name = "Drift – Ambient Cityscape"
+tags = ["beta", "cyberpunk", "ambient"]
+prompt = "Neon-lit futuristic city, rain, neon_drift_style"
+seed = 200
+steps = 32
+cfg = 8.0

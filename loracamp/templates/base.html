@@ -5,10 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{{ catalog.title if catalog else "LoraCamp" }}{% endblock %}</title>
-    <link rel="stylesheet" href="{{ relative_root }}static/css/site.css">
+    <link rel="stylesheet" href="{{ relative_root }}static/css/site.css?v={{ build_id }}">
     {{ theme_css | safe }}
     {% if has_custom_css %}
     <link rel="stylesheet" href="{{ relative_root }}static/css/custom.css">
+    {% endif %}
+    {% if debug_layout %}
+    <link rel="stylesheet" href="{{ relative_root }}static/css/debug.css?v={{ build_id }}">
     {% endif %}
 
     {# OpenGraph / Social meta tags — injected per page #}
@@ -48,10 +51,16 @@
                 <span class="site-title">{{ catalog.title if catalog else "LoraCamp" }}</span>
             </a>
             <div class="header-actions">
+                {% if (catalog and catalog.loracamp_signature) or not catalog %}
+                <span class="loracamp_signature">Built with LoraCamp</span>
+                {% endif %}
+                <a id="translate-link" class="translate-link" href="https://translate.google.com/" target="_blank" rel="noopener" title="Translate this page" style="margin-right: 1rem;">🌐 Translate</a>
+                <script>document.getElementById('translate-link').href='https://translate.google.com/translate?u='+encodeURIComponent(window.location.href);</script>
+                
                 <button class="browse-btn theme-toggle" onclick="toggleTheme()" aria-label="Toggle Light/Dark Theme">
                     <span class="theme-icon">🌓</span>
                 </button>
-                <button class="browse-btn" onclick="showBrowser(this)">
+                <button class="browse-btn" style="margin-left: 0.5rem;">
                     <span>Search</span>
                     <span class="search-icon">🔍</span>
                 </button>
@@ -65,18 +74,7 @@
 
     <footer>
         <div class="footer-content">
-            {% if (catalog and catalog.loracamp_signature) or not catalog %}
-            <span class="loracamp_signature">Built with LoraCamp</span>
-            {% endif %}
-            <button class="browse-btn footer-browse theme-toggle" onclick="toggleTheme()" aria-label="Toggle Light/Dark Theme">
-                <span class="theme-icon">🌓</span>
-            </button>
-            <button class="browse-btn footer-browse" onclick="showBrowser(this)">
-                <span>Search</span>
-                <span class="search-icon">🔍</span>
-            </button>
-            <a id="translate-link" class="translate-link" href="https://translate.google.com/" target="_blank" rel="noopener" title="Translate this page">🌐 Translate</a>
-            <script>document.getElementById('translate-link').href='https://translate.google.com/translate?u='+encodeURIComponent(window.location.href);</script>
+            {# Footer is empty for now per user request #}
         </div>
     </footer>
 

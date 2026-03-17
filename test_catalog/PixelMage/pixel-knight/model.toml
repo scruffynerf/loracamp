@@ -1,0 +1,26 @@
+title = "Pixel Knight"
+creator = "PixelMage"
+synopsis = "A retro pixel-art armor style LoRA for SDXL."
+about = """
+Pixel Knight translates classic 8-bit armor designs into diffusion-friendly prompts.
+Trained on a curated dataset of retro game sprites and modern interpretations.
+"""
+trigger_word = "pixel_knight_v1"
+permalink = "pixel-knight"
+tags = ["alpha", "style", "pixel", "armor"]
+release_date = "2025-03-01"
+base_model = "SDXL 1.0"
+version = "v1.0"
+copy_link = true
+sample_prompts = [
+    "A warrior in pixel art armor, pixel_knight_v1, 8-bit aesthetic",
+    "Fantasy knight standing in a pixel art dungeon, glowing sword, pixel_knight_v1"
+]
+
+[[links]]
+label = "CivitAI Page"
+url = "https://civitai.com/models/test-pixel-knight"
+
+[[links]]
+label = "Training Notes"
+url = "https://github.com/pixelmage-test/pixel-knight"

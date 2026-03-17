@@ -1,0 +1,15 @@
+name = "PixelMage"
+synopsis = "Specialist in pixel-art inspired generative styles."
+about = """
+PixelMage creates LoRAs that push diffusion models toward retro pixel-art aesthetics.
+All models are trained on SD and SDXL base models.
+"""
+image_description = "PixelMage's avatar"
+
+[[links]]
+label = "HuggingFace"
+url = "https://huggingface.co/pixelmage-test"
+
+[[links]]
+label = "CivitAI"
+url = "https://civitai.com/user/pixelmage-test"

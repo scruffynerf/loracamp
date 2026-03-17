@@ -1,0 +1,290 @@
+/* ==========================================
+   DEBUG LAYOUT — Conditional via --debug-layout
+   ========================================== */
+
+/* ---- Utility mixin ---- */
+/* Each rule: outline + ::before label */
+
+/* ===== PAGE STRUCTURE (base.html) ===== */
+
+body > header { outline: 2px solid #e00; position: relative; }
+body > header::before { content: "site header"; position: absolute; top: 0; left: 0; background: #e00; color: #fff; font-size: 9px; padding: 1px 4px; z-index: 9999; }
+
+#content { outline: 2px solid #00bb00; position: relative; }
+#content::before { content: "#content"; position: absolute; top: 0; left: 0; background: #00bb00; color: #000; font-size: 9px; padding: 1px 4px; z-index: 9999; }
+
+body > footer { outline: 2px solid #0055ff; position: relative; }
+body > footer::before { content: "site footer"; position: absolute; top: 0; left: 0; background: #0055ff; color: #fff; font-size: 9px; padding: 1px 4px; z-index: 9999; }
+
+/* ===== SITE HEADER INTERNALS (base.html) ===== */
+
+#logo { outline: 1px dashed #000; position: relative; }
+#logo::after { content: "#logo"; position: absolute; top: -12px; left: 0; background: #000; color: #fff; font-size: 8px; padding: 1px 3px; }
+
+.logo-icon { outline: 1px dotted blue; position: relative; }
+.logo-icon::after { content: ".logo-icon"; position: absolute; bottom: -10px; left: 0; background: blue; color: #fff; font-size: 8px; padding: 1px 3px; }
+
+.site-title { outline: 1px dotted #c00; position: relative; }
+.site-title::after { content: ".site-title"; position: absolute; bottom: -10px; right: 0; background: #c00; color: #fff; font-size: 8px; padding: 1px 3px; }
+
+.header-actions { outline: 2px solid #ff9900; position: relative; }
+.header-actions::before { content: ".header-actions"; position: absolute; bottom: 0; right: 0; background: #ff9900; color: #000; font-size: 9px; padding: 1px 4px; }
+
+.theme-toggle { outline: 2px solid cyan !important; position: relative; }
+.theme-toggle::after { content: ".theme-toggle"; position: absolute; top: -12px; right: 0; background: cyan; color: #000; font-size: 8px; padding: 1px 3px; }
+
+.translate-link { outline: 2px solid orange !important; position: relative; }
+.translate-link::after { content: ".translate-link"; position: absolute; top: -12px; left: 0; background: orange; color: #000; font-size: 8px; padding: 1px 3px; }
+
+.loracamp_signature { outline: 1px dashed #aaa; position: relative; }
+.loracamp_signature::after { content: ".loracamp_signature"; position: absolute; top: -12px; left: 0; background: #aaa; color: #000; font-size: 8px; padding: 1px 3px; }
+
+.browse-btn { outline: 2px solid #33aacc !important; position: relative; }
+.browse-btn::after { content: ".browse-btn"; position: absolute; top: -12px; left: 0; background: #33aacc; color: #fff; font-size: 8px; padding: 1px 3px; }
+
+/* ===== CONTENT HEADER (index.html — catalog info) ===== */
+
+.catalog-header { outline: 2px solid #e65c00; position: relative; }
+.catalog-header::before { content: ".catalog-header"; position: absolute; top: 0; left: 40px; background: #e65c00; color: #fff; font-size: 9px; padding: 1px 4px; z-index: 100; }
+
+.catalog-title { outline: 2px solid #555; position: relative; }
+.catalog-title::before { content: ".catalog-title"; position: absolute; top: -14px; left: 0; background: #555; color: #fff; font-size: 8px; padding: 1px 3px; }
+
+.catalog-synopsis { outline: 1px solid #777; position: relative; }
+.catalog-synopsis::before { content: ".catalog-synopsis"; position: absolute; top: -12px; left: 0; background: #777; color: #fff; font-size: 8px; padding: 1px 3px; }
+
+.catalog-links { outline: 2px solid #00bcd4; position: relative; }
+.catalog-links::before { content: ".catalog-links"; position: absolute; top: -12px; left: 0; background: #00bcd4; color: #000; font-size: 8px; padding: 1px 3px; }
+
+.catalog-about { outline: 2px dashed #9c27b0; position: relative; }
+.catalog-about::before { content: ".catalog-about"; position: absolute; top: -12px; right: 0; background: #9c27b0; color: #fff; font-size: 8px; padding: 1px 3px; }
+
+.catalog-about-text { outline: 1px dotted #ce93d8; position: relative; }
+.catalog-about-text::before { content: ".catalog-about-text"; position: absolute; top: -12px; left: 0; background: #ce93d8; color: #000; font-size: 8px; padding: 1px 3px; }
+
+/* ===== CATALOG/INDEX MODEL GRID ===== */
+
+.page_grid { outline: 2px solid #008800; position: relative; }
+.page_grid::before { content: ".page_grid"; position: absolute; top: 0; left: 0; background: #008800; color: #fff; font-size: 9px; padding: 1px 4px; }
+
+.model_list { outline: 2px solid #006699; position: relative; }
+.model_list::before { content: ".model_list"; position: absolute; top: 0; right: 0; background: #006699; color: #fff; font-size: 9px; padding: 1px 4px; }
+
+.model-grid { outline: 1px dotted #44aadd; position: relative; }
+
+.release-card { outline: 2px solid #3344aa; position: relative; }
+.release-card::before { content: ".release-card"; position: absolute; top: 0; right: 0; background: #3344aa; color: #fff; font-size: 8px; padding: 1px 3px; }
+
+.card-link { outline: 1px dashed #8899cc !important; position: relative; }
+.card-link::after { content: ".card-link"; position: absolute; bottom: 0; left: 0; background: #8899cc; color: #fff; font-size: 8px; padding: 1px 3px; }
+
+.card-image { outline: 2px solid #880088 !important; position: relative; }
+.card-image::after { content: ".card-image"; position: absolute; bottom: 0; left: 0; background: #880088; color: #fff; font-size: 8px; padding: 1px 3px; }
+
+.card-placeholder { outline: 2px dashed #cc44cc !important; position: relative; }
+
+.card-title { outline: 1px dotted #9933cc; position: relative; }
+.card-title::after { content: ".card-title"; position: absolute; bottom: -12px; left: 0; background: #9933cc; color: #fff; font-size: 8px; padding: 1px 3px; }
+
+.card-creator { outline: 1px dashed #aaa; position: relative; }
+.card-creator::after { content: ".card-creator"; position: absolute; bottom: -12px; left: 0; background: #aaa; color: #000; font-size: 8px; padding: 1px 3px; }
+
+.creator-section { outline: 2px solid #ff6600; position: relative; }
+.creator-section::before { content: ".creator-section"; position: absolute; top: 0; left: 0; background: #ff6600; color: #fff; font-size: 9px; padding: 1px 4px; }
+
+.creator-section-heading { outline: 1px solid #ff8833; position: relative; }
+.creator-section-heading::before { content: ".creator-section-heading"; position: absolute; top: -13px; left: 0; background: #ff8833; color: #fff; font-size: 8px; padding: 1px 3px; }
+
+/* ===== MODEL PAGE ===== */
+
+.model-header { outline: 2px solid #e65c00; position: relative; }
+.model-header::before { content: ".model-header"; position: absolute; top: 0; left: 40px; background: #e65c00; color: #fff; font-size: 9px; padding: 1px 4px; z-index: 10; }
+
+.back-links { outline: 1px dashed #999; position: relative; }
+.back-links::before { content: ".back-links"; position: absolute; top: -12px; left: 0; background: #999; color: #000; font-size: 8px; padding: 1px 3px; }
+
+.back-link { outline: 1px dashed #bbb !important; position: relative; }
+
+.model-title { outline: 2px solid #334; position: relative; }
+.model-title::before { content: ".model-title"; position: absolute; top: -14px; left: 0; background: #334; color: #fff; font-size: 8px; padding: 1px 3px; }
+
+.model-synopsis { outline: 1px solid #556; position: relative; }
+.model-synopsis::before { content: ".model-synopsis"; position: absolute; top: -12px; left: 0; background: #556; color: #fff; font-size: 8px; padding: 1px 3px; }
+
+.model-creator { outline: 1px dashed #778; position: relative; }
+.model-creator::before { content: ".model-creator"; position: absolute; top: -12px; left: 0; background: #778; color: #fff; font-size: 8px; padding: 1px 3px; }
+
+.model-links { outline: 1px dashed #44aacc; position: relative; }
+.model-links::before { content: ".model-links"; position: absolute; top: -12px; left: 0; background: #44aacc; color: #000; font-size: 8px; padding: 1px 3px; }
+
+.model-specs { outline: 1px solid #8800ff; position: relative; }
+.model-specs::before { content: ".model-specs"; position: absolute; top: -12px; left: 0; background: #8800ff; color: #fff; font-size: 8px; padding: 1px 3px; }
+
+.badge { outline: 1px solid #bb77ff !important; position: relative; }
+
+/* ===== MODEL PAGE LAYOUT ===== */
+
+.page_split { outline: 2px solid #ff00ff; position: relative; }
+.page_split::before { content: ".page_split"; position: absolute; top: 0; right: 0; background: #ff00ff; color: #000; font-size: 9px; padding: 1px 4px; }
+
+.model_sidebar { outline: 2px solid #00cccc; position: relative; }
+.model_sidebar::before { content: ".model_sidebar"; position: absolute; top: 10px; left: 0; background: #00cccc; color: #000; font-size: 9px; padding: 1px 4px; }
+
+.model_info { outline: 2px solid #eecc00; position: relative; }
+.model_info::before { content: ".model_info"; position: absolute; top: 10px; right: 0; background: #eecc00; color: #000; font-size: 9px; padding: 1px 4px; }
+
+.cover { outline: 2px solid #ff00ff !important; position: relative; }
+
+.gallery { outline: 2px solid #cc5500; position: relative; }
+.gallery::before { content: ".gallery (thumbs)"; position: absolute; top: -12px; left: 0; background: #cc5500; color: #fff; font-size: 8px; padding: 1px 3px; }
+
+.thumb { outline: 1px dashed #ff7700 !important; }
+
+.actions { outline: 2px solid #009900; position: relative; }
+.actions::before { content: ".actions"; position: absolute; bottom: -12px; left: 0; background: #009900; color: #fff; font-size: 9px; padding: 1px 4px; }
+
+.actions.primary::before { content: ".actions.primary"; }
+.actions.secondary::before { content: ".actions.secondary"; }
+
+.download-link { outline: 1px dashed #00cc66 !important; position: relative; }
+.download-link::after { content: ".download-link"; position: absolute; bottom: -10px; left: 0; background: #00cc66; color: #000; font-size: 8px; padding: 1px 3px; }
+
+.action-btn { outline: 1px dashed #00aa44 !important; position: relative; }
+
+/* ===== MODEL INFO SECTIONS ===== */
+
+.about { outline: 2px solid #aa0000; position: relative; }
+.about::before { content: ".about"; position: absolute; top: 0; left: 0; background: #aa0000; color: #fff; font-size: 9px; padding: 1px 4px; }
+
+.section-title { outline: 1px solid #cc4444; position: relative; }
+.section-title::before { content: ".section-title"; position: absolute; top: -12px; left: 0; background: #cc4444; color: #fff; font-size: 8px; padding: 1px 3px; }
+
+.about-title::before { content: ".about-title"; }
+.prompts-title::before { content: ".prompts-title"; }
+.samples-title::before { content: ".samples-title"; }
+
+.about-text { outline: 1px dashed #dd8888; position: relative; }
+
+.prompts { outline: 2px solid #0000aa; position: relative; }
+.prompts::before { content: ".prompts"; position: absolute; top: 0; left: 0; background: #0000aa; color: #fff; font-size: 9px; padding: 1px 4px; }
+
+.usage_item { outline: 1px dashed #4444cc; position: relative; }
+.usage_item::before { content: ".usage_item"; position: absolute; top: -12px; left: 0; background: #4444cc; color: #fff; font-size: 8px; padding: 1px 3px; }
+
+.usage-trigger::before { content: ".usage-trigger"; }
+.usage-prompts::before { content: ".usage-prompts"; }
+
+.usage-label { outline: 1px dashed #6666ee !important; position: relative; }
+.trigger-word { outline: 1px solid #3399ff !important; }
+
+.samples { outline: 2px solid #aa00aa; position: relative; }
+.samples::before { content: ".samples"; position: absolute; top: 0; left: 0; background: #aa00aa; color: #fff; font-size: 9px; padding: 1px 4px; }
+
+/* ===== AUDIO TRACK PLAYER ===== */
+
+.tracks { outline: 2px solid #006655; position: relative; }
+.tracks::before { content: ".tracks"; position: absolute; top: 0; left: 0; background: #006655; color: #fff; font-size: 9px; padding: 1px 4px; }
+
+.track { outline: 1px solid #00998a; position: relative; }
+.track::before { content: ".track"; position: absolute; top: 0; right: 0; background: #00998a; color: #fff; font-size: 8px; padding: 1px 3px; }
+
+.track-play-btn { outline: 1px dashed #33ddcc !important; position: relative; }
+.track-play-btn::after { content: ".track-play-btn"; position: absolute; bottom: -10px; left: 0; background: #33ddcc; color: #000; font-size: 8px; padding: 1px 3px; }
+
+.track-play-icon { outline: 1px dotted #88eeee; }
+
+.track-audio { outline: 1px dashed #44bbaa !important; }
+
+.track-cover { outline: 2px solid #ff00ff !important; position: relative; }
+.track-cover::after { content: ".track-cover"; position: absolute; bottom: 0; left: 0; background: #ff00ff; color: #fff; font-size: 8px; padding: 1px 3px; }
+
+.track-info { outline: 1px solid #88bb00; position: relative; }
+.track-info::before { content: ".track-info"; position: absolute; top: -12px; left: 0; background: #88bb00; color: #000; font-size: 8px; padding: 1px 3px; }
+
+.track-name-row { outline: 1px dashed #aabb44; position: relative; }
+.track-name-row::before { content: ".track-name-row"; position: absolute; top: -12px; left: 0; background: #aabb44; color: #000; font-size: 8px; padding: 1px 3px; }
+
+.track-number { outline: 1px solid #ccdd66 !important; }
+.track-title { outline: 1px solid #ddee88 !important; position: relative; }
+.track-title::after { content: ".track-title"; position: absolute; bottom: -10px; left: 0; background: #ddee88; color: #000; font-size: 8px; padding: 1px 3px; }
+
+.track-duration { outline: 1px dashed #ffdd00; position: relative; }
+.track-duration::before { content: ".track-duration"; position: absolute; top: -12px; right: 0; background: #ffdd00; color: #000; font-size: 8px; padding: 1px 3px; }
+
+.track-time { outline: 1px solid #eecc00 !important; }
+
+/* ===== IMAGE GALLERY (image LoRA) ===== */
+
+.image-gallery { outline: 2px solid #cc5500; position: relative; }
+.image-gallery::before { content: ".image-gallery"; position: absolute; top: -12px; left: 0; background: #cc5500; color: #fff; font-size: 9px; padding: 1px 4px; }
+
+.gallery-item { outline: 1px solid #dd7711; position: relative; }
+.gallery-item::before { content: ".gallery-item"; position: absolute; top: 0; right: 0; background: #dd7711; color: #fff; font-size: 8px; padding: 1px 3px; }
+
+.gallery-thumb { outline: 2px solid #ff9933 !important; }
+.gallery-caption { outline: 1px dashed #ffaa55 !important; }
+
+.sample-metadata { outline: 1px solid #33aa99; position: relative; }
+.sample-metadata::before { content: ".sample-metadata"; position: absolute; top: -12px; left: 0; background: #33aa99; color: #fff; font-size: 8px; padding: 1px 3px; }
+
+.meta-item { outline: 1px dotted #55bbaa !important; }
+.meta-grid { outline: 1px dashed #77ccbb; position: relative; }
+.meta-grid::before { content: ".meta-grid"; position: absolute; top: -12px; left: 0; background: #77ccbb; color: #000; font-size: 8px; padding: 1px 3px; }
+
+/* ===== CREATOR PAGE ===== */
+
+.creator-header { outline: 2px solid #e65c00; position: relative; }
+.creator-header::before { content: ".creator-header"; position: absolute; top: 0; left: 40px; background: #e65c00; color: #fff; font-size: 9px; padding: 1px 4px; z-index: 10; }
+
+.creator-image-wrap { outline: 2px solid #aa3388; position: relative; }
+.creator-image-wrap::before { content: ".creator-image-wrap"; position: absolute; top: 0; right: 0; background: #aa3388; color: #fff; font-size: 8px; padding: 1px 3px; }
+
+.creator-image { outline: 2px solid #dd55aa !important; }
+
+.creator-title { outline: 2px solid #334; position: relative; }
+.creator-title::before { content: ".creator-title"; position: absolute; top: -14px; left: 0; background: #334; color: #fff; font-size: 8px; padding: 1px 3px; }
+
+.creator-links { outline: 1px dashed #44aacc; position: relative; }
+.creator-links::before { content: ".creator-links"; position: absolute; top: -12px; left: 0; background: #44aacc; color: #000; font-size: 8px; padding: 1px 3px; }
+
+.creator-bio { outline: 2px solid #5544aa; position: relative; }
+.creator-bio::before { content: ".creator-bio"; position: absolute; top: 0; left: 0; background: #5544aa; color: #fff; font-size: 9px; padding: 1px 4px; }
+
+.creator-bio-about { outline: 1px dashed #7766cc; position: relative; }
+.creator-bio-about::before { content: ".creator-bio-about"; position: absolute; top: -12px; left: 0; background: #7766cc; color: #fff; font-size: 8px; padding: 1px 3px; }
+
+.creator-bio-more { outline: 1px dashed #9988ee; position: relative; }
+.creator-bio-more::before { content: ".creator-bio-more"; position: absolute; top: -12px; left: 0; background: #9988ee; color: #000; font-size: 8px; padding: 1px 3px; }
+
+.model-list { outline: 2px solid #006699; position: relative; }
+.model-list::before { content: ".model-list"; position: absolute; top: 0; left: 0; background: #006699; color: #fff; font-size: 9px; padding: 1px 4px; }
+
+.model-list-title { outline: 1px solid #0088bb; position: relative; }
+.model-list-title::before { content: ".model-list-title"; position: absolute; top: -13px; left: 0; background: #0088bb; color: #fff; font-size: 8px; padding: 1px 3px; }
+
+.model-grid { outline: 1px dotted #44aadd; position: relative; }
+.model-card { outline: 2px solid #3344aa; position: relative; }
+.model-card::before { content: ".model-card"; position: absolute; top: 0; right: 0; background: #3344aa; color: #fff; font-size: 8px; padding: 1px 3px; }
+
+.card-preview { outline: 2px solid #880088 !important; }
+
+.card-info { outline: 1px solid #556; position: relative; }
+.card-info::before { content: ".card-info"; position: absolute; top: -12px; right: 0; background: #556; color: #fff; font-size: 8px; padding: 1px 3px; }
+
+.card-badge { outline: 1px solid #bb77ff !important; }
+
+/* ===== SHARED ===== */
+
+.synopsis { outline: 1px solid #777; position: relative; }
+.synopsis::before { content: ".synopsis"; position: absolute; top: -12px; left: 0; background: #777; color: #fff; font-size: 8px; padding: 1px 3px; }
+
+.pill-link { outline: 1px dashed #00bcd4 !important; position: relative; }
+.pill-link::after { content: ".pill-link"; position: absolute; bottom: -10px; left: 0; background: #00bcd4; color: #000; font-size: 7px; padding: 1px 2px; }
+
+.sample_prompt { outline: 1px dashed #8888cc !important; position: relative; }
+
+.text { outline: 1px dotted #eeeeee; position: relative; }
+
+/* ===== IMAGES (all img tags) ===== */
+img { outline: 2px solid #ff00ff !important; position: relative; }
+

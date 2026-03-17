@@ -21,10 +21,10 @@ def test_generate_metadata_json():
     json_str = generate_metadata_json(manifest, None)
     data = json.loads(json_str)
     
-    assert data["title"] == "My Model"
-    assert data["about"] == "A good model"
-    assert data["trigger_word"] == "oh yeah"
-    assert "technical" not in data
+    assert data["model_name"] == "My Model"
+    assert data["notes"] == "A good model"
+    assert data["civitai"]["trainedWords"] == ["oh yeah"]
+    assert "sha256" in data
 
 def test_generate_metadata_json_with_file(tmp_path: Path):
     manifest = ModelManifest(
@@ -38,8 +38,7 @@ def test_generate_metadata_json_with_file(tmp_path: Path):
     json_str = generate_metadata_json(manifest, file_path)
     data = json.loads(json_str)
     
-    assert data["title"] == "My File Model"
-    assert "technical" in data
-    assert data["technical"]["filename"] == "test.safetensors"
-    assert "sha256" in data["technical"]
-    assert data["technical"]["size_bytes"] == len(b"dummy data")
+    assert data["model_name"] == "My File Model"
+    assert data["file_name"] == "test"
+    assert "sha256" in data
+    assert data["size"] == len(b"dummy data")

@@ -22,19 +22,26 @@
     </div>
     {% endif %}
 
-    <h1>{{ creator.name or creator.title }}</h1>
+    <h1 class="creator-title">{{ creator.name or creator.title }}</h1>
 
     {% if creator.synopsis %}
     <p class="synopsis">{{ creator.synopsis }}</p>
     {% endif %}
 
-    {% if creator.links %}
+    {% if creator.links or creator.links_dict %}
     <nav class="creator-links">
         {% for link in creator.links %}
         <a href="{{ link.url }}" class="pill-link" {% if link.url.startswith('http') %}target="_blank" rel="me noopener"{% endif %}>
             {{ link.label or link.url }}
         </a>
         {% endfor %}
+        {% if creator.links_dict %}
+            {% for label, url in creator.links_dict.items() %}
+            <a href="{{ url }}" class="pill-link" target="_blank" rel="me noopener">
+                {{ label }}
+            </a>
+            {% endfor %}
+        {% endif %}
     </nav>
     {% endif %}
 
@@ -47,27 +54,32 @@
     {% endif %}
 </header>
 
-{% if creator.more %}
+{% if creator.about or creator.more %}
 <section class="creator-bio">
-    <div class="text">{{ creator.more | markdown }}</div>
+    {% if creator.about %}
+    <div class="text about-text creator-bio-about">{{ creator.about | markdown if creator.about else "" }}</div>
+    {% endif %}
+    {% if creator.more %}
+    <div class="text more-text creator-bio-more" style="margin-top: 1rem;">{{ creator.more | markdown }}</div>
+    {% endif %}
 </section>
 {% endif %}
 
 {% if models %}
 <section class="model-list">
-    <h2>Models</h2>
+    <h2 class="model-list-title">Models</h2>
     <div class="model-grid">
         {% for model in models %}
         <a href="../{{ model.slug }}/index.html" class="model-card">
             {% if model.preview_url %}
             <img src="../{{ model.slug }}/{{ model.preview_url }}" alt="{{ model.manifest.title }}" class="card-preview">
             {% else %}
-            <div class="placeholder"></div>
+            <div class="placeholder card-placeholder"></div>
             {% endif %}
             <div class="card-info">
-                <strong>{{ model.manifest.title }}</strong>
+                <strong class="card-title">{{ model.manifest.title }}</strong>
                 {% if model.manifest.base_model %}
-                <span class="badge">{{ model.manifest.base_model }}</span>
+                <span class="badge card-badge">{{ model.manifest.base_model }}</span>
                 {% endif %}
             </div>
         </a>

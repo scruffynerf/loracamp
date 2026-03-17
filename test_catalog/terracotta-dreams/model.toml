@@ -1,0 +1,22 @@
+title = "Terracotta Dreams"
+creator = "Scruffy"
+synopsis = "Warm earthy pottery-and-clay texture LoRA."
+about = """
+Terracotta Dreams produces subjects that look moulded from warm fired clay.
+A great counterweight to the usual cold sci-fi styles.
+"""
+trigger_word = "terracotta_dreams"
+permalink = "terracotta-dreams"
+tags = ["beta", "delta", "texture", "earthy"]
+release_date = "2025-06-01"
+base_model = "Flux.1-dev"
+version = "v1.0"
+copy_link = true
+sample_prompts = [
+    "A portrait sculpted in terracotta clay, terracotta_dreams, warm studio light",
+    "Ancient figurine melting into clay, terracotta_dreams, close-up"
+]
+
+[[links]]
+label = "HuggingFace"
+url = "https://huggingface.co/scruffynerf/terracotta-dreams"

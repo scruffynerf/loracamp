@@ -1,0 +1,26 @@
+title = "Aurora Weave"
+creator = "Scruffy"
+synopsis = "Soft aurora-borealis light diffusion for atmospheric photography looks."
+about = """
+Aurora Weave blends northern-lights color palettes into photorealistic compositions.
+It pairs well with outdoor, nighttime, and sci-fi scenes.
+"""
+trigger_word = "aurora_weave"
+permalink = "aurora-weave"
+tags = ["gamma", "atmosphere", "lighting", "nature"]
+release_date = "2025-04-10"
+base_model = "SDXL 1.0"
+version = "v1.1"
+copy_link = true
+sample_prompts = [
+    "Hiker on a snowy mountain under an aurora, aurora_weave, green and violet sky",
+    "A figure silhouetted against northern lights, aurora_weave, long exposure look"
+]
+
+[[links]]
+label = "HuggingFace"
+url = "https://huggingface.co/scruffynerf/aurora-weave"
+
+[[links]]
+label = "CivitAI"
+url = "https://civitai.com/models/test-aurora-weave"

@@ -1,0 +1,7 @@
+name = "Aurora – Silhouette"
+tags = ["gamma", "delta", "night", "silhouette"]
+prompt = "Figure silhouetted against northern lights, aurora_weave, long exposure photography"
+seed = 128
+steps = 35
+cfg = 8.0
+sampler = "DPM++ 2M SDE"

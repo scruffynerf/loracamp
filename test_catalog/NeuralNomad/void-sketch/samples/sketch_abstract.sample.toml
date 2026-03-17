@@ -1,0 +1,7 @@
+name = "Void Sketch – Abstract Shape"
+tags = ["delta", "experimental", "abstract"]
+prompt = "Shadowy amorphous form in white negative space, void_sketch"
+seed = 555
+steps = 18
+cfg = 8.5
+sampler = "DPM++ SDE Karras"

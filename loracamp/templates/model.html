@@ -3,19 +3,19 @@
 {% block title %}{{ model.title }} - LoraCamp{% endblock %}
 
 {% block content %}
-<header>
+<header class="model-header">
     <nav class="back-links" style="margin-bottom: 1rem;">
         {% if relative_root != '../' %}
         <a href="{{ relative_root }}index.html" class="back-link" style="margin-right: 1rem;">⌂ Catalog</a>
         {% endif %}
         <a href="../index.html" class="back-link">↑ {{ "Up a Level" if relative_root != '../' else "Back to Catalog" }}</a>
     </nav>
-    <h1>{{ model.title }}</h1>
+    <h1 class="model-title">{{ model.title }}</h1>
     {% if model.synopsis %}
-    <p class="synopsis">{{ model.synopsis }}</p>
+    <p class="synopsis model-synopsis">{{ model.synopsis }}</p>
     {% endif %}
     {% if model.creator or model.creators %}
-    <p class="creator">by
+    <p class="creator model-creator">by
         {% if model.creators %}
         {{ model.creators | join(', ') }}
         {% else %}
@@ -34,7 +34,7 @@
     </nav>
     {% endif %}
 
-    <div class="specs">
+    <div class="specs model-specs">
         {% if model.version %}<span class="badge">Version {{ model.version }}</span>{% endif %}
         {% if model.base_model %}<span class="badge">Base: {{ model.base_model }}</span>{% endif %}
     </div>
@@ -63,14 +63,14 @@
 
         <div class="actions primary">
             {% for download in downloads %}
-            <a href="{{ download.url }}" class="button {{ 'primary-btn' if download.primary else 'secondary-btn' }} download-link" {{ 'download' if not download.url.startswith('http') else '' }}>
+            <a href="{{ download.url }}" class="button {{ 'primary-btn' if download.primary else 'secondary-btn' }} download-link" {{ 'download' if not download.url.startswith('http') else '' }} title="{{ download.title }}">
                 <span class="icon">{{ '💾' if download.primary else '📄' }}</span>
                 {{ download.label }}
             </a>
             {% endfor %}
             
             {% if downloads | length > 1 %}
-            <button id="downloadAllBtn" class="button action-btn">
+            <button id="downloadAllBtn" class="button action-btn" title="Download all files at once">
                 <span class="icon">⬇️</span> Download All
             </button>
             <script>
@@ -118,24 +118,24 @@
     <div class="model_info">
         {% if model.about %}
         <section class="about">
-            <h2>About</h2>
-            <div class="text">{{ model.about }}</div>
+            <h2 class="section-title about-title">About</h2>
+            <div class="text about-text">{{ model.about }}</div>
         </section>
         {% endif %}
 
         {% if model.trigger_word or model.sample_prompts %}
         <section class="prompts">
-            <h2>Usage</h2>
+            <h2 class="section-title prompts-title">Usage</h2>
             {% if model.trigger_word %}
-            <div class="usage_item">
-                <label>Trigger Word:</label>
-                <code>{{ model.trigger_word }}</code>
+            <div class="usage_item usage-trigger">
+                <label class="usage-label">Trigger Word:</label>
+                <code class="trigger-word">{{ model.trigger_word }}</code>
             </div>
             {% endif %}
 
             {% if model.sample_prompts %}
-            <div class="usage_item">
-                <label>Sample Prompts:</label>
+            <div class="usage_item usage-prompts">
+                <label class="usage-label">Sample Prompts:</label>
                 {% for prompt in model.sample_prompts %}
                 <blockquote class="sample_prompt">{{ prompt }}</blockquote>
                 {% endfor %}
@@ -146,15 +146,287 @@
 
         {% if samples %}
         <section class="samples">
-            <h2>Samples</h2>
+            <h2 class="section-title samples-title">{{ 'Gallery' if is_image_lora else 'Samples' }}</h2>
+            
+            {% if is_image_lora %}
+            <div class="image-gallery">
+                {% for sample in samples %}
+                <div class="gallery-item">
+                    <img src="{{ sample.url }}" alt="{{ sample.name }}" class="gallery-thumb" 
+                         onclick="openLightbox(this)" 
+                         data-src="{{ sample.url }}" 
+                         data-caption="{{ sample.name }}" 
+                         data-manifest='{{ sample.manifest | tojson | forceescape if sample.manifest else "" }}'>
+                    <span class="gallery-caption">{{ sample.name }}</span>
+                    {% if sample.manifest %}
+                    <div class="sample-metadata">
+                        {% if sample.manifest.prompt %}<div class="meta-item"><label>Prompt:</label> {{ sample.manifest.prompt }}</div>{% endif %}
+                        <div class="meta-grid">
+                            {% if sample.manifest.seed %}<div class="meta-item"><label>Seed:</label> {{ sample.manifest.seed }}</div>{% endif %}
+                            {% if sample.manifest.steps %}<div class="meta-item"><label>Steps:</label> {{ sample.manifest.steps }}</div>{% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <div id="lightbox" class="lightbox">
+                <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
+                <span class="lightbox-nav lightbox-prev" onclick="prevImage()">&#10094;</span>
+                <span class="lightbox-nav lightbox-next" onclick="nextImage()">&#10095;</span>
+                <img class="lightbox-content" id="lightbox-img" onclick="event.stopPropagation()">
+                <div id="lightbox-caption" class="lightbox-caption"></div>
+                <div id="lightbox-details" class="lightbox-details" onclick="event.stopPropagation()"></div>
+            </div>
+
+            <style>
+                .image-gallery {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                    gap: 1.5rem;
+                    margin-top: 1rem;
+                }
+                .gallery-item {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.5rem;
+                    background: var(--bg-1-veil, rgba(255,255,255,0.03));
+                    padding: 0.8rem;
+                    border-radius: 12px;
+                    border: 1px solid var(--fg-1-veil, rgba(255,255,255,0.05));
+                }
+                .gallery-thumb {
+                    width: 100%;
+                    aspect-ratio: 1;
+                    object-fit: cover;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    transition: transform 0.2s, box-shadow 0.2s;
+                    background: var(--bg-secondary, #1a1a1a);
+                }
+                .gallery-thumb:hover {
+                    transform: scale(1.02);
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                }
+                .gallery-caption {
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    color: var(--fg-1);
+                    text-align: center;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+
+                .sample-metadata {
+                    font-size: 0.8rem;
+                    background: rgba(0,0,0,0.2);
+                    padding: 0.6rem;
+                    border-radius: 6px;
+                    margin-top: 0.5rem;
+                    color: var(--fg-3);
+                    line-height: 1.4;
+                }
+                .meta-item { margin-bottom: 0.3rem; }
+                .meta-item label { font-weight: bold; color: var(--mg-acc, #888); margin-right: 0.4rem; }
+                .meta-grid { 
+                    display: grid; 
+                    grid-template-columns: 1fr 1fr; 
+                    gap: 0.4rem; 
+                }
+                .sample-metadata code {
+                    background: rgba(255,255,255,0.1);
+                    padding: 1px 4px;
+                    border-radius: 3px;
+                    font-size: 0.75rem;
+                }
+
+                /* Lightbox CSS */
+                .lightbox {
+                    display: none;
+                    position: fixed;
+                    z-index: 1000;
+                    padding: 50px 20px;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    height: 100%;
+                    overflow: auto;
+                    background-color: rgba(0,0,0,0.92);
+                    backdrop-filter: blur(10px);
+                }
+                .lightbox-content {
+                    margin: auto;
+                    display: block;
+                    max-width: 95%;
+                    max-height: 70vh;
+                    object-fit: contain;
+                    border-radius: 8px;
+                    box-shadow: 0 0 30px rgba(0,0,0,0.5);
+                }
+                .lightbox-caption {
+                    margin: 15px auto 5px;
+                    width: 100%;
+                    text-align: center;
+                    color: #fff;
+                    font-size: 1.4rem;
+                    font-weight: bold;
+                }
+                .lightbox-details {
+                    margin: 20px auto;
+                    width: 90%;
+                    max-width: 1000px;
+                    color: #ccc;
+                    font-size: 0.9rem;
+                    background: rgba(255,255,255,0.05);
+                    padding: 1.5rem;
+                    border-radius: 12px;
+                    border: 1px solid rgba(255,255,255,0.1);
+                }
+                .lightbox-close {
+                    position: absolute;
+                    top: 20px;
+                    right: 35px;
+                    color: #fff;
+                    font-size: 40px;
+                    font-weight: bold;
+                    transition: 0.3s;
+                    cursor: pointer;
+                    z-index: 1010;
+                }
+                .lightbox-nav {
+                    position: fixed;
+                    top: 45%;
+                    color: #fff;
+                    font-size: 50px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    user-select: none;
+                    padding: 20px;
+                    transition: 0.2s;
+                    z-index: 1010;
+                    background: rgba(0,0,0,0.2);
+                    border-radius: 50%;
+                    width: 40px;
+                    height: 40px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .lightbox-prev { left: 20px; }
+                .lightbox-next { right: 20px; }
+                .lightbox-nav:hover {
+                    color: var(--bg-acc, #3498db);
+                    background: rgba(255,255,255,0.1);
+                    transform: scale(1.1);
+                }
+            </style>
+
+            <script>
+                let currentGalleryIndex = 0;
+                const galleryItems = [];
+
+                // Initialize gallery items on load
+                document.addEventListener('DOMContentLoaded', function() {
+                    const items = document.querySelectorAll('.gallery-thumb');
+                    items.forEach((item, index) => {
+                        galleryItems.push({
+                            src: item.getAttribute('data-src'),
+                            caption: item.getAttribute('data-caption'),
+                            manifest: item.getAttribute('data-manifest'),
+                            index: index
+                        });
+                        item.setAttribute('onclick', `openLightbox(${index})`);
+                    });
+                    
+                    // Lightbox background click to close
+                    document.getElementById('lightbox').addEventListener('click', function(e) {
+                         if (e.target === this) closeLightbox();
+                    });
+                });
+
+                function openLightbox(index) {
+                    currentGalleryIndex = index;
+                    updateLightbox();
+                    const lb = document.getElementById('lightbox');
+                    lb.style.display = "block";
+                    document.body.style.overflow = 'hidden';
+                }
+
+                function updateLightbox() {
+                    const item = galleryItems[currentGalleryIndex];
+                    if (!item) return;
+
+                    const img = document.getElementById('lightbox-img');
+                    const cap = document.getElementById('lightbox-caption');
+                    const details = document.getElementById('lightbox-details');
+                    
+                    img.src = item.src;
+                    cap.innerHTML = `${item.caption} <small>(${currentGalleryIndex + 1} / ${galleryItems.length})</small>`;
+                    
+                    if (item.manifest) {
+                        try {
+                            const manifest = JSON.parse(item.manifest);
+                            let html = '<div class="sample-metadata">';
+                            if (manifest.prompt) html += `<div class="meta-item"><label>Prompt:</label> ${manifest.prompt}</div>`;
+                            if (manifest.negative_prompt) html += `<div class="meta-item"><label>Negative:</label> ${manifest.negative_prompt}</div>`;
+                            html += '<div class="meta-grid">';
+                            if (manifest.seed) html += `<div class="meta-item"><label>Seed:</label> <code>${manifest.seed}</code></div>`;
+                            if (manifest.steps) html += `<div class="meta-item"><label>Steps:</label> <code>${manifest.steps}</code></div>`;
+                            if (manifest.cfg) html += `<div class="meta-item"><label>CFG:</label> <code>${manifest.cfg}</code></div>`;
+                            if (manifest.sampler) html += `<div class="meta-item"><label>Sampler:</label> <code>${manifest.sampler}</code></div>`;
+                            if (manifest.scheduler) html += `<div class="meta-item"><label>Scheduler:</label> <code>${manifest.scheduler}</code></div>`;
+                            html += '</div>';
+                            if (manifest.loras && manifest.loras.length > 0) {
+                                html += `<div class="meta-item"><label>LoRAs:</label> ${manifest.loras.map(l => `<code>${l.name}: ${l.weight}</code>`).join(' ')}</div>`;
+                            }
+                            html += '</div>';
+                            details.innerHTML = html;
+                            details.style.display = 'block';
+                        } catch (e) {
+                            details.style.display = 'none';
+                        }
+                    } else {
+                        details.style.display = 'none';
+                    }
+                }
+
+                function nextImage() {
+                    currentGalleryIndex = (currentGalleryIndex + 1) % galleryItems.length;
+                    updateLightbox();
+                }
+
+                function prevImage() {
+                    currentGalleryIndex = (currentGalleryIndex - 1 + galleryItems.length) % galleryItems.length;
+                    updateLightbox();
+                }
+
+                function closeLightbox() {
+                    document.getElementById('lightbox').style.display = "none";
+                    document.body.style.overflow = 'auto';
+                }
+
+                // Keyboard Controls
+                document.addEventListener('keydown', function(e) {
+                    const lb = document.getElementById('lightbox');
+                    if (lb.style.display === "block") {
+                        if (e.key === "Escape") closeLightbox();
+                        if (e.key === "ArrowRight") nextImage();
+                        if (e.key === "ArrowLeft") prevImage();
+                    }
+                });
+            </script>
+
+            {% else %}
             <div class="tracks">
                 {% for sample in samples %}
                 <div class="track" data-duration="{{ sample.duration | default('0') }}">
-                    <button class="track_playback" tabindex="-1">
-                        <span class="icon">
+                    <button class="track_playback track-play-btn" tabindex="-1">
+                        <span class="icon track-play-icon">
                             <svg width="1em" height="1em" version="1.1" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><title>Play</title><path d="m11.116 59.677 45.476-26.453-45.544-28.093z"/></svg>
                         </span>
-                        <audio preload="none">
+                        <audio class="track-audio" preload="none">
                             {% set ext = sample.url.split('.')[-1].lower() %}
                             {% if ext == 'opus' %}
                             <source src="{{ sample.url }}" type="audio/ogg; codecs=opus">
@@ -163,23 +435,48 @@
                             {% endif %}
                         </audio>
                         {% if sample.cover_url %}
-                        <img aria-hidden="true" src="{{ sample.cover_url }}">
+                        <img class="track-cover" aria-hidden="true" src="{{ sample.cover_url }}">
                         {% elif preview_url %}
-                        <img aria-hidden="true" src="{{ preview_url }}">
+                        <img class="track-cover" aria-hidden="true" src="{{ preview_url }}">
                         {% endif %}
                     </button>
-                    <div>
-                        <div>
-                            <span class="number">{{ loop.index }}</span>
+                    <div class="track-info">
+                        <div class="track-name-row">
+                            <span class="number track-number">{{ loop.index }}</span>
                             {% if sample.external_page %}
-                            <a href="{{ sample.external_page }}" class="title" target="_blank" rel="noopener">{{ sample.name }}</a>
+                            <a href="{{ sample.external_page }}" class="title track-title" target="_blank" rel="noopener">{{ sample.name }}</a>
                             {% else %}
-                            <span class="title">{{ sample.name }}</span>
+                            <span class="title track-title">{{ sample.name }}</span>
                             {% endif %}
                         </div>
+                        {% if sample.manifest %}
+                        <div class="sample-metadata">
+                            {% if sample.manifest.prompt %}<div class="meta-item"><label>Prompt:</label> {{ sample.manifest.prompt }}</div>{% endif %}
+                            {% if sample.manifest.negative_prompt %}<div class="meta-item"><label>Negative:</label> {{ sample.manifest.negative_prompt }}</div>{% endif %}
+                            <div class="meta-grid">
+                                {% if sample.manifest.seed %}<div class="meta-item"><label>Seed:</label> {{ sample.manifest.seed }}</div>{% endif %}
+                                {% if sample.manifest.steps %}<div class="meta-item"><label>Steps:</label> {{ sample.manifest.steps }}</div>{% endif %}
+                                {% if sample.manifest.cfg %}<div class="meta-item"><label>CFG:</label> {{ sample.manifest.cfg }}</div>{% endif %}
+                                {% if sample.manifest.sampler %}<div class="meta-item"><label>Sampler:</label> {{ sample.manifest.sampler }}</div>{% endif %}
+                                {% if sample.manifest.scheduler %}<div class="meta-item"><label>Scheduler:</label> {{ sample.manifest.scheduler }}</div>{% endif %}
+                            </div>
+                            {% if sample.manifest.loras %}
+                            <div class="meta-item"><label>LoRAs:</label> 
+                                {% for lora in sample.manifest.loras %}
+                                    <code>{{ lora.name }}: {{ lora.weight }}</code>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            {% if sample.workflow_url %}
+                            <div class="meta-item" style="margin-top: 5px;">
+                                <a href="{{ sample.workflow_url }}" class="pill-link" target="_blank" rel="noopener" style="font-size: 0.7rem;">View Workflow</a>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
                     </div>
-                    <div>
-                        <span class="time">
+                    <div class="track-duration">
+                        <span class="time track-time">
                             {% if sample.duration %}
                             {{ '{:d}:{:02d}'.format((sample.duration // 60)|int, (sample.duration % 60)|int) }}
                             {% endif %}
@@ -188,6 +485,7 @@
                 </div>
                 {% endfor %}
             </div>
+            {% endif %}
         </section>
         {% endif %}
     </div>
