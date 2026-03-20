@@ -8,7 +8,9 @@
     <link rel="stylesheet" href="{{ relative_root }}static/css/site.css?v={{ build_id }}">
     {{ theme_css | safe }}
     {% if has_custom_css %}
-    <link rel="stylesheet" href="{{ relative_root }}static/css/custom.css">
+        {% for css_file in custom_css_files %}
+        <link rel="stylesheet" href="{{ relative_root }}static/css/{{ css_file }}?v={{ build_id }}">
+        {% endfor %}
     {% endif %}
     {% if debug_layout %}
     <link rel="stylesheet" href="{{ relative_root }}static/css/debug.css?v={{ build_id }}">

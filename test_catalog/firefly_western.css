@@ -1,0 +1,57 @@
+/**
+ * FIREFLY WESTERN SPACE - LoraCamp Theme
+ * --------------------------------------
+ * Weathered leather and aged gold with Light/Dark modes.
+ */
+
+/* Dark Mode - Western Space */
+:root, :root[data-theme="dark"] {
+    --bg-1: #0a0806;
+    --bg-2: #1c1610;
+    --bg-3: #2e241b;
+    --bg-acc: #c5a059;
+    --mg-acc: #c5a059;
+    --bg-1-overlay: rgba(10, 8, 6, 0.9);
+
+    --fg-1: #e2d1a6;
+    --fg-2: #bda58a;
+    --fg-3: #7c6a56;
+    --fg-1-focus: #c5a059;
+
+    --accent: #c5a059;
+    --border-color: rgba(197, 160, 89, 0.2);
+}
+
+/* Light Mode - Frontier Journal */
+:root[data-theme="light"] {
+    --bg-1: #f4ede0;
+    --bg-2: #e9decb;
+    --bg-3: #ddd1b8;
+    --bg-acc: #8b5a2b;
+    --mg-acc: #8b5a2b;
+    --bg-1-overlay: rgba(244, 237, 224, 0.9);
+
+    --fg-1: #3e2716;
+    --fg-2: #5d3a1a;
+    --fg-3: #7c6a56;
+    --fg-1-focus: #8b5a2b;
+
+    --accent: #8b5a2b;
+    --border-color: rgba(139, 90, 43, 0.2);
+}
+
+/* Typography Overrides */
+html, body {
+    font-family: 'Outfit', 'Georgia', serif;
+}
+
+/* Specific Theme Accents */
+.site-title { color: var(--bg-acc) !important; font-family: 'Georgia', serif; font-style: italic; }
+.browse-btn { color: var(--bg-acc) !important; border-color: var(--border-color) !important; }
+.catalog-about { border-left-color: var(--bg-acc) !important; }
+.badge { color: var(--bg-acc) !important; border-color: var(--border-color) !important; }
+
+.primary-btn {
+    background: var(--bg-acc) !important;
+    color: var(--bg-1) !important;
+}

@@ -1,5 +1,6 @@
 title = "LoraCamp Test Catalog"
 creator = "Scruffy Nerf"
+# site_assets = ["digital_observatory.css"]
 base_url = "https://loracamp.test"
 language = "en"
 synopsis = "A high-performance showcase for generative model delivery."

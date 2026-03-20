@@ -346,11 +346,12 @@ button.link {
 .docked_player button[disabled] { color: var(--bg-3); }
 .docked_player .elements {
     align-items: center;
-    -webkit-backdrop-filter: blur(3px) brightness(60%);
-    backdrop-filter: blur(3px) brightness(60%);
+    -webkit-backdrop-filter: blur(12px) brightness(60%);
+    backdrop-filter: blur(12px) brightness(60%);
     background: var(--bg-1-overlay);
     display: flex;
     padding-bottom: env(safe-area-inset-bottom, 0);
+    border-top: 1px solid var(--border-color);
 }
 .docked_player .number { 
     display: none;
@@ -952,13 +953,24 @@ svg * { pointer-events: none; /* prevent click events on sub elements of an svg 
     right: 0;
     top: 0;
     z-index: -1;
+    opacity: 0.6;
+    transition: opacity 0.2s ease, transform 0.3s ease;
+    object-fit: cover;
+}
+.track .track_playback:hover img {
+    opacity: 0.9;
+    transform: scale(1.05);
 }
 .js_enabled .track_playback img { opacity: 1; } /* Removed haze */
 .track .track_playback svg { 
     display: block;
-    width: 2rem; /* Consistent size */
+    width: 2rem;
     height: 2rem;
     margin: 0;
+    transition: transform 0.2s ease;
+}
+.track .track_playback:hover svg {
+    transform: scale(1.1);
 }
 .track-play-icon {
     display: flex;

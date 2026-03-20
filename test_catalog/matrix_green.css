@@ -1,0 +1,61 @@
+/**
+ * MATRIX GREEN - LoraCamp Theme
+ * -----------------------------
+ * Classic "Terminal" aesthetic with distinct Light/Dark modes.
+ */
+
+/* Dark Mode - The Classic Green-on-Black Terminal */
+:root, :root[data-theme="dark"] {
+    --bg-1: #000800;
+    --bg-2: #051005;
+    --bg-3: #0a1c0a;
+    --bg-1-overlay: rgba(0, 8, 0, 0.85);
+    --bg-acc: #00ff41;
+    --mg-acc: #00ff41;
+    --bg-1-veil: rgba(0, 8, 0, 0.9);
+
+    --fg-1: #00ff41;
+    --fg-2: #00cc33;
+    --fg-3: #008822;
+    --fg-1-focus: #00ff41;
+
+    --accent: #00ff41;
+    --border-color: rgba(0, 255, 65, 0.2);
+}
+
+/* Light Mode - The "White Terminal" / Paper Aesthetic */
+:root[data-theme="light"] {
+    --bg-1: #f0fff0;
+    --bg-2: #e0f0e0;
+    --bg-3: #d0e0d0;
+    --bg-1-overlay: rgba(240, 255, 240, 0.85);
+    --bg-acc: #006600;
+    --mg-acc: #006600;
+    --bg-1-veil: rgba(240, 255, 240, 0.9);
+
+    --fg-1: #004400;
+    --fg-2: #006600;
+    --fg-3: #225522;
+    --fg-1-focus: #008800;
+
+    --accent: #006600;
+    --border-color: rgba(0, 102, 0, 0.15);
+}
+
+/* Typography Overrides */
+html, body {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+}
+
+/* Specific Theme Accents */
+.site-title { color: var(--bg-acc) !important; text-shadow: 0 0 8px rgba(0, 255, 65, 0.3); }
+.browse-btn { color: var(--bg-acc) !important; border-color: var(--border-color) !important; }
+.catalog-about { border-left-color: var(--bg-acc) !important; }
+.badge { color: var(--bg-acc) !important; border-color: var(--border-color) !important; }
+.sample_prompt { border-left-color: var(--bg-acc) !important; }
+
+.primary-btn {
+    background: var(--bg-acc) !important;
+    color: var(--bg-1) !important;
+    text-shadow: none;
+}

@@ -30,6 +30,7 @@ class LoraCampEngine:
         self.creator_aliases: Dict[str, str] = {}
         self.theme_css: str = ""
         self.has_custom_css: bool = False
+        self.custom_css_files: List[str] = []
         self.build_id = str(int(time.time()))
         
         # Set up explicit output folders for clarity
@@ -98,17 +99,7 @@ class LoraCampEngine:
             if debug_css_dest.exists():
                 debug_css_dest.unlink()
         
-        # 2b. Check for custom.css in catalog_dir
-        custom_css_path = self.catalog_dir / "custom.css"
-        if custom_css_path.exists():
-            import shutil
-            dest = self.site_dir / "static" / "css" / "custom.css"
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(custom_css_path, dest)
-            self.has_custom_css = True
-            print(f"  Detected custom.css, copying to static assets...")
-        
-        self.env.globals["has_custom_css"] = self.has_custom_css
+        # 2b. Initial has_custom_css check will be finalized after catalog parsing
         self.env.globals["enable_opengraph"] = True # Default
         self.env.globals["enable_feeds"] = True   # Default
         
@@ -126,6 +117,41 @@ class LoraCampEngine:
             catalog = parse_catalog(catalog_manifest_path)
             self.env.globals["enable_opengraph"] = catalog.opengraph if isinstance(catalog.opengraph, bool) else True
             self.env.globals["enable_feeds"] = catalog.feeds if isinstance(catalog.feeds, bool) else True
+
+            # 3a. Handle site_assets (including custom CSS)
+            if catalog.site_assets:
+                import shutil
+                for asset_name in catalog.site_assets:
+                    asset_src = self.catalog_dir / asset_name
+                    if asset_src.exists():
+                        if asset_name.endswith(".css"):
+                            dest = self.site_dir / "static" / "css" / asset_name
+                            dest.parent.mkdir(parents=True, exist_ok=True)
+                            shutil.copy2(asset_src, dest)
+                            self.custom_css_files.append(asset_name)
+                            print(f"  Custom CSS asset: {asset_name}")
+                        else:
+                            # Other assets go to static/assets
+                            dest = self.site_dir / "static" / "assets" / asset_name
+                            dest.parent.mkdir(parents=True, exist_ok=True)
+                            shutil.copy2(asset_src, dest)
+                            print(f"  Site asset: {asset_name}")
+                    else:
+                        print(f"  WARNING: Site asset '{asset_name}' not found in {self.catalog_dir}")
+
+        # 3b. Legacy custom.css check (if not already added via site_assets)
+        custom_css_path = self.catalog_dir / "custom.css"
+        if custom_css_path.exists() and "custom.css" not in self.custom_css_files:
+            import shutil
+            dest = self.site_dir / "static" / "css" / "custom.css"
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(custom_css_path, dest)
+            self.custom_css_files.append("custom.css")
+            print(f"  Detected legacy custom.css, copying to static assets...")
+
+        self.has_custom_css = len(self.custom_css_files) > 0
+        self.env.globals["has_custom_css"] = self.has_custom_css
+        self.env.globals["custom_css_files"] = self.custom_css_files
 
         # 3b. Generate theme CSS from catalog config
         theme_config = getattr(catalog, "theme", None) if catalog else None
