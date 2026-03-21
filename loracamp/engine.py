@@ -153,9 +153,22 @@ class LoraCampEngine:
         self.env.globals["has_custom_css"] = self.has_custom_css
         self.env.globals["custom_css_files"] = self.custom_css_files
 
-        # 3b. Generate theme CSS from catalog config
-        theme_config = getattr(catalog, "theme", None) if catalog else None
-        self.theme_css = generate_theme_css(theme_config)
+        # 3b. Generate theme CSS from catalog config.
+        # If the user has provided custom CSS via site_assets, skip generating
+        # the inline theme block entirely. The custom CSS fully replaces it and
+        # we want to avoid cascade conflicts.
+        if self.custom_css_files:
+            # Only inject the shared structural vars (border-radius, etc.) not colors
+            theme_config = getattr(catalog, "theme", None) if catalog else None
+            if theme_config:
+                round_corners = theme_config.get("round_corners", False)
+                border_radius = "0.4rem" if round_corners else "0"
+                self.theme_css = f"<style>\n:root {{\n    --cover-border-radius: {border_radius};\n    --ul-list-style-type: disc;\n}}\n</style>"
+            else:
+                self.theme_css = ""
+        else:
+            theme_config = getattr(catalog, "theme", None) if catalog else None
+            self.theme_css = generate_theme_css(theme_config)
 
         # 4. Walk directory for Models and Creators
         models = []
