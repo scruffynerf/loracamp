@@ -5,17 +5,12 @@
 {% block content %}
 <header class="catalog-header model-header">
     <div class="catalog-content">
-        <h1 class="model-title">{{ model.title }}</h1>
+        <h1 class="model-title">{{ metadata.model_name or model.title }}</h1>
         
-        {% if model.creator or model.creators %}
+        {% set display_creator = metadata.civitai.creator.username if metadata and metadata.civitai and metadata.civitai.creator and metadata.civitai.creator.username else (model.creator or (model.creators[0] if model.creators else None)) %}
+        {% if display_creator %}
         <p class="creator model-creator">by
-            {% if model.creators %}
-                {% for creator in model.creators %}
-                    <a href="{{ relative_root }}{{ creator | lower | replace(' ', '-') }}/index.html">{{ creator }}</a>{{ ", " if not loop.last }}
-                {% endfor %}
-            {% else %}
-                <a href="{{ relative_root }}{{ model.creator | lower | replace(' ', '-') }}/index.html">{{ model.creator }}</a>
-            {% endif %}
+            <a href="{{ relative_root }}{{ display_creator | lower | replace(' ', '-') }}/index.html">{{ display_creator }}</a>
         </p>
         {% endif %}
 
@@ -25,7 +20,9 @@
 
         <div class="specs model-specs">
             {% if model.version %}<span class="badge">Version {{ model.version }}</span>{% endif %}
-            {% if model.base_model %}<span class="badge">Base: {{ model.base_model }}</span>{% endif %}
+            {% set base_model = metadata.base_model if metadata and metadata.base_model and metadata.base_model != 'Unknown' else model.base_model %}
+            {% if base_model %}<span class="badge">Base: {{ base_model }}</span>{% endif %}
+            {% if metadata and metadata.size %}<span class="badge">Size: {{ (metadata.size / 1024 / 1024 / 1024) | round(2) if metadata.size > 1024*1024*1024 else (metadata.size / 1024 / 1024) | round(2) }}{{ 'GB' if metadata.size > 1024*1024*1024 else 'MB' }}</span>{% endif %}
         </div>
     </div>
 
@@ -128,13 +125,29 @@
         </section>
         {% endif %}
 
-        {% if model.trigger_word or model.sample_prompts %}
+        {% set trigger_words = metadata.civitai.trainedWords if metadata and metadata.civitai and metadata.civitai.trainedWords else ([model.trigger_word] if model.trigger_word else []) %}
+        {% set usage_tips = metadata.usage_tips | from_json if metadata and metadata.usage_tips else {} %}
+
+        {% if trigger_words or model.sample_prompts or usage_tips %}
         <section class="prompts">
             <h2 class="section-title prompts-title">Usage</h2>
-            {% if model.trigger_word %}
+            
+            {% if trigger_words %}
             <div class="usage_item usage-trigger">
-                <label class="usage-label">Trigger Word:</label>
-                <code class="trigger-word">{{ model.trigger_word }}</code>
+                <label class="usage-label">Trigger Word{{ 's' if trigger_words|length > 1 }}:</label>
+                {% for word in trigger_words %}
+                <code class="trigger-word">{{ word }}</code>{{ ", " if not loop.last }}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if usage_tips %}
+            <div class="usage_item usage-tips">
+                <label class="usage-label">Recommended Settings:</label>
+                <div class="specs model-specs" style="margin-top: 5px;">
+                    {% if usage_tips.strength %}<span class="badge secondary">Strength: {{ usage_tips.strength }}</span>{% endif %}
+                    {% if usage_tips.clip_skip %}<span class="badge secondary">Clip Skip: {{ usage_tips.clip_skip }}</span>{% endif %}
+                </div>
             </div>
             {% endif %}
 

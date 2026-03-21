@@ -1,10 +1,11 @@
 import os
 import time
+import json
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 from jinja2 import Environment, FileSystemLoader
 from .manifests import CatalogManifest, ModelManifest, SampleManifest, CreatorManifest, parse_catalog, parse_model, parse_sample, parse_creator, load_toml
-from .metadata import generate_metadata_json, save_metadata
+from .metadata import generate_metadata_json, save_metadata, load_metadata, validate_metadata, merge_metadata, calculate_sha256
 from .assets import copy_static_assets
 from .cdn import resolve_file_url, should_go_to_cdn
 from .validators import validate_manifest
@@ -47,6 +48,7 @@ class LoraCampEngine:
         # Register custom filters
         import markdown
         self.env.filters["markdown"] = lambda t: markdown.markdown(t or "", extensions=['extra'])
+        self.env.filters["from_json"] = lambda s: json.loads(s) if s and isinstance(s, str) and s.strip().startswith('{') else (s if isinstance(s, dict) else {})
     
     
     def _load_plugins(self):
@@ -318,11 +320,56 @@ class LoraCampEngine:
         else:
             model_stem = original_stem
 
-        # 2. Generate Metadata JSON
-        metadata_filename = f"{model_stem}.metadata.json"
-        meta_json = generate_metadata_json(model_manifest, main_model_file)
-        save_metadata(meta_json, model_site_dir / metadata_filename)
+        # 2. Handle Metadata JSON (Sidecar)
+        # Look for <original_stem>.metadata.json first (matches source file)
+        # fallback to <model_stem>.metadata.json (matches slug)
+        metadata_filename = f"{model_stem}.metadata.json" # Output name
+        source_metadata_path = model_dir / f"{original_stem}.metadata.json"
+        
+        if not source_metadata_path.exists():
+            source_metadata_path = model_dir / metadata_filename
+        
+        # Technical data for gap-filling
+        tech_data = {
+            "file_name": model_stem,
+            "file_path": str(main_model_file.absolute()),
+            "size": main_model_file.stat().st_size if main_model_file.exists() else 0,
+            "modified": main_model_file.stat().st_mtime if main_model_file.exists() else time.time(),
+            "sha256": calculate_sha256(main_model_file) if main_model_file.exists() else "",
+            "hash_status": "completed" if main_model_file.exists() else "pending"
+        }
+        
+        # Manifest data for gap-filling (mapped to schema fields)
+        manifest_data = {
+            "model_name": model_manifest.title,
+            "notes": model_manifest.about,
+            "modelDescription": model_manifest.about,
+            "base_model": model_manifest.base_model,
+            "tags": model_manifest.tags
+        }
+        # Add creator info if available
+        if model_manifest.creator:
+            manifest_data["civitai"] = {"creator": {"username": model_manifest.creator}}
 
+        existing_metadata = load_metadata(source_metadata_path)
+        if existing_metadata:
+            print(f"  Using existing metadata: {metadata_filename}")
+            # Validate existing
+            v_errors = validate_metadata(existing_metadata)
+            if v_errors:
+                print(f"  [WARNING] Metadata validation errors in {metadata_filename}:")
+                for err in v_errors:
+                    print(f"    - {err}")
+            
+            # Merge (fill gaps)
+            metadata_dict = merge_metadata(existing_metadata, manifest_data, tech_data)
+            # Use json.dumps to get the string for saving to output
+            meta_json = json.dumps(metadata_dict, indent=2)
+        else:
+            # Generate new
+            meta_json = generate_metadata_json(model_manifest, main_model_file)
+            metadata_dict = json.loads(meta_json)
+            
         # 2. Handle Preview Image / Video
         preview_url = None
         video_url = None
@@ -349,10 +396,11 @@ class LoraCampEngine:
             else:
                 print(f"  WARNING: Declared preview '{model_manifest.preview}' not found or invalid type.")
                 
-        # 2. Look for expected filenames (preview.* or cover.*)
+        # 2. Look for expected filenames (original stem, "preview", or "cover")
+        allowed_stems = {original_stem.lower(), "cover", "preview"}
         if not target_preview:
             for f in sorted(model_dir.iterdir()):
-                if f.stem.lower() in ("cover", "preview") and f.suffix.lower() in all_exts:
+                if f.stem.lower() in allowed_stems and f.suffix.lower() in all_exts:
                     target_preview = f
                     break
                     
@@ -404,8 +452,8 @@ class LoraCampEngine:
             elif ext in image_extensions:
                 # Image preview
                 preview_dest = model_site_dir / f"{model_stem}.preview.{target_ext}"
-                if optimize_image(f, preview_dest, format=target_ext):
-                    preview_url = preview_dest.name
+                optimize_image(f, preview_dest, target_format=target_ext)
+                preview_url = preview_dest.name
         else:
             print(f"  WARNING: No preview images found for {model_dir.name}. Using default placeholder.")
             # Use __file__ to resolve the package directory reliably
@@ -413,10 +461,30 @@ class LoraCampEngine:
             placeholder_src = pkg_dir / "static" / "placeholder.jpg"
             if placeholder_src.exists():
                 preview_dest = model_site_dir / f"{model_stem}.preview.jpg"
+                import shutil
                 shutil.copy2(placeholder_src, preview_dest)
                 preview_url = preview_dest.name
             else:
                 print(f"  WARNING: Default placeholder missing from {placeholder_src}")
+
+        # 3. Update metadata with resolved preview_url and SAVE
+        if preview_url:
+            # Resolve to site URL if base_url is present, otherwise keep it relative to model page
+            final_preview_link = preview_url
+            if catalog and catalog.base_url:
+                base = catalog.base_url.rstrip("/")
+                try:
+                    rel_path = model_site_dir.relative_to(self.site_dir)
+                    final_preview_link = f"{base}/{rel_path.as_posix()}/{preview_url}"
+                except ValueError:
+                    pass
+            
+            # Cast to Dict to fix Pyre error
+            if isinstance(metadata_dict, dict):
+                metadata_dict["preview_url"] = final_preview_link
+            
+        meta_json = json.dumps(metadata_dict, indent=2)
+        save_metadata(meta_json, model_site_dir / metadata_filename)
         
         # 3. Handle Asset Placement (Local vs CDN)
         model_filename = f"{model_stem}.safetensors"
@@ -622,7 +690,7 @@ class LoraCampEngine:
         # but for individual model pages we might need it passed in)
         
         # 7. Render Detail Page
-        self.render_model_page(model_manifest, samples, model_url, preview_url, video_url, downloads, model_site_dir, catalog=catalog, is_image_lora=is_image_lora)
+        self.render_model_page(model_manifest, samples, model_url, preview_url, video_url, downloads, model_site_dir, metadata=metadata_dict, catalog=catalog, is_image_lora=is_image_lora)
 
         # Build list of creators for the index
         display_creator = model_manifest.creator
@@ -845,7 +913,7 @@ class LoraCampEngine:
             return f"{cdn_url.rstrip('/')}/{model_slug}/samples/{dest_name}"
         return f"samples/{dest_name}"
 
-    def render_model_page(self, model_manifest: ModelManifest, samples: List[Dict], model_url: str, preview_url: Optional[str], video_url: Optional[str], downloads: List[Dict], output_dir: Path, catalog: Optional[CatalogManifest] = None, search_data: Optional[Dict] = None, is_image_lora: bool = False):
+    def render_model_page(self, model_manifest: ModelManifest, samples: List[Dict], model_url: str, preview_url: Optional[str], video_url: Optional[str], downloads: List[Dict], output_dir: Path, metadata: Optional[Dict] = None, catalog: Optional[CatalogManifest] = None, search_data: Optional[Dict] = None, is_image_lora: bool = False):
         try:
             template = self.env.get_template("model.html")
         except Exception:
@@ -871,6 +939,7 @@ class LoraCampEngine:
             
         content = template.render(
             model=model_manifest,
+            metadata=metadata,
             samples=samples,
             model_url=model_url,
             preview_url=preview_url,
